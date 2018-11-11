@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>guitarlette</title>
+    </head>
+    <body>
+        <h1>Home</h1>
+
+        {% for song in song_list %}
+            {{ song.id }}
+            {{ song.name }}
+        
+        {% endfor %}
+    </body>
+</html>
