@@ -15,7 +15,7 @@ setup(
     url="https://github.com/erm/guitarlette",
     description="A lightweight songwriting tool for guitar.",
     long_description=get_long_description(),
-    install_requires=["starlette", "uvicorn", "asyncpg", "graphene"],
+    install_requires=["starlette", "uvicorn", "asyncpg", "graphene", "pychord"],
     long_description_content_type="text/markdown",
     author="Jordan Eremieff",
     author_email="jordan@eremieff.com",

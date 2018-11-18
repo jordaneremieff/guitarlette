@@ -1,23 +1,36 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>guitarlette</title>
 
-    <script>
- 
-        </script>
-    </head>
-    <body>
-        <h1>Composer</h1>
+<head>
+    <title>guitarlette</title>
+</head>
+
+<body>
+    <h1>Composer</h1>
+    <div id="song-viewer"></div>
+    Name: <input type="text" id="song-name"></input><br>
+
+    Content: <textarea id="song-content" is="song-composer"></textarea><br>
+    <button onClick="saveSong()">Save</button>
 
 
-        <div id="editor">
+     <script>
 
-            {% if song %}
-                {{ song.content }}
-            {% endif %}
+        function saveSong() {
 
-        </div>
-   
-    </body>
+            name = document.getElementById("song-name").value
+            content = document.getElementById("song-content").value
+
+            ws.send(JSON.stringify({
+                "name": name,
+                "content": content
+            }))
+
+        }
+
+
+
+    </script>
+</body>
+
 </html>

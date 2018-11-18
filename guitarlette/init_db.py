@@ -1,9 +1,11 @@
 from tortoise import Tortoise, run_async
-from guitarlette.config import DB_CONFIG
+from guitarlette.config import Config
+
+config = Config()
 
 
 async def init():
-    await Tortoise.init(**DB_CONFIG)
+    await Tortoise.init(**config.DATABASE)
     await Tortoise.generate_schemas()
 
 

@@ -1,15 +1,20 @@
 import uvicorn
-from graphql.execution.executors.asyncio import AsyncioExecutor
+import json
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
 from starlette.responses import HTMLResponse
 from starlette.graphql import GraphQLApp
+from starlette.endpoints import WebSocketEndpoint
+
 from tortoise import Tortoise
+from graphql.execution.executors.asyncio import AsyncioExecutor
 
 from guitarlette.schema import schema
 from guitarlette.endpoints import TemplateEndpoint
 from guitarlette.models import Song
-from guitarlette.config import DB_CONFIG
+from guitarlette.config import Config
+
+from pychord import Chord
 
 
 class Guitarlette(Starlette):
@@ -22,52 +27,55 @@ class Guitarlette(Starlette):
     can be achieved using decorator patterns.
     """
 
-    def __init__(self, config: dict) -> None:
-        debug = config.get("debug", False)
-        template_directory = config["TEMPLATE_DIR"]
-        super().__init__(debug=debug, template_directory=template_directory)
+    def __init__(self, config: Config) -> None:
+        super().__init__(debug=config.DEBUG, template_directory=config.TEMPLATE_DIR)
         self.config = config
+        self.graphql_app = GraphQLApp(schema=schema, executor=AsyncioExecutor())
         # Add exception handlers
         self.add_exception_handler(500, self.server_error)
         self.add_exception_handler(404, self.not_found)
         # Mount static files
-        self.mount(
-            "/static", StaticFiles(directory=config["STATIC_DIR"]), name="static"
-        )
+        self.mount("/static", StaticFiles(directory=config.STATIC_DIR), name="static")
         # Add GraphQL route
-        self.add_route(
-            "/graphql", GraphQLApp(schema=schema, executor=AsyncioExecutor())
-        )
+        self.add_route("/graphql", self.graphql_app)
         # Add startup/shutdown event handlers
         self.lifespan_handler.add_event_handler("startup", self.on_startup)
         self.lifespan_handler.add_event_handler("shutdown", self.on_shutdown)
 
     def get_exception_response(self, request, code: int) -> HTMLResponse:
-        """Retrieve and render the template for a specified exception response."""
+        """
+        Retrieve and render the template for a specified exception response.
+        """
         template = self.get_template(f"{code}.html")
         content = template.render(request=request)
         return HTMLResponse(content, status_code=code)
 
     async def on_startup(self) -> None:
-        """Startup event handler. Initialize the database connection."""
-        await Tortoise.init(**DB_CONFIG)
+        """
+        Startup event handler. Initialize the database connection.
+        """
+        await Tortoise.init(**self.config.DATABASE)
 
     async def on_shutdown(self) -> None:
-        """Shutdown event handler. Close the database connections."""
+        """
+        Shutdown event handler. Close the database connections.
+        """
         await Tortoise.close_connections()
 
     async def server_error(self, request, exc) -> HTMLResponse:
-        """Handle internal server error (500) responses."""
+        """
+        Handle internal server error (500) responses.
+        """
         return self.get_exception_response(request, 500)
 
     async def not_found(self, request, exc) -> HTMLResponse:
-        """Handle not found (404) responses."""
+        """
+        Handle not found (404) responses.
+        """
         return self.get_exception_response(request, 404)
 
 
-app = Guitarlette(
-    config={"DEBUG": True, "TEMPLATE_DIR": "templates", "STATIC_DIR": "static"}
-)
+app = Guitarlette(config=Config())
 
 
 @app.route("/")
@@ -82,23 +90,40 @@ class Homepage(TemplateEndpoint):
         return context
 
 
-# @app.route("/songs/new", name="create-song")
-# class CreateSong(TemplateEndpoint):
+@app.route("/compose")
+class Composer(TemplateEndpoint):
 
-#     template_name = "compose.html"
+    template_name = "compose.html"
+
+    async def get_context(self, request) -> dict:
+        context = await super().get_context(request)
+        context["WEBSOCKET_URL"] = "ws://127.0.0.1:5000/ws"
+        return context
 
 
-# @app.route("/songs/update/{id}")
-# class UpdateSong(TemplateEndpoint):
+@app.websocket_route("/ws")
+class GraphQLWebSocket(WebSocketEndpoint):
 
-#     template_name = "compose.html"
+    encoding = "text"
 
-#     async def get_context(self, request):
-#         context = await super().get_context(request)
-#         context["song_list"] = await SongQuery(app.get_db()).get(
-#             id=self.scope["app"].path_params["id"]
-#         )
-#         return context
+    async def on_receive(self, websocket, data):
+        data = json.loads(data)
+        mutation = """
+            mutation createSong($name: String!, $content: String!) {
+              createSong(name: $name, content: $content) {
+                song {
+                  id
+                  name
+                  content
+                }
+              }
+            }
+        """
+        await self.scope["app"].graphql_app.execute(query=mutation, variables=data)
+
+        # TODO: Parse the mutation result and assign chord values where they can be
+        # detected, then return that in the WS response.
+        # Once the chords are parsed we can then do all sorts of things.
 
 
 if __name__ == "__main__":
