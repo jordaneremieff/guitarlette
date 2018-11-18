@@ -1,18 +1,14 @@
 import uvicorn
-
-from typing import Union
-
 from graphql.execution.executors.asyncio import AsyncioExecutor
-
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
 from starlette.responses import HTMLResponse
 from starlette.graphql import GraphQLApp
+from tortoise import Tortoise
 
 from guitarlette.schema import schema
 from guitarlette.endpoints import TemplateEndpoint
-from guitarlette.database.connection import Connection
-from guitarlette.database.models import SongQuery
+from guitarlette.models import Song
 from guitarlette.config import DB_CONFIG
 
 
@@ -46,10 +42,6 @@ class Guitarlette(Starlette):
         self.lifespan_handler.add_event_handler("startup", self.on_startup)
         self.lifespan_handler.add_event_handler("shutdown", self.on_shutdown)
 
-    def get_db(self) -> Union[Connection, None]:
-        """Convenience method for returning the database connection pool."""
-        return self.config["DB_CONNECTION"]
-
     def get_exception_response(self, request, code: int) -> HTMLResponse:
         """Retrieve and render the template for a specified exception response."""
         template = self.get_template(f"{code}.html")
@@ -57,12 +49,12 @@ class Guitarlette(Starlette):
         return HTMLResponse(content, status_code=code)
 
     async def on_startup(self) -> None:
-        """Startup event handler. Create a database connection pool."""
-        await self.get_db().create_connection()
+        """Startup event handler. Initialize the database connection."""
+        await Tortoise.init(**DB_CONFIG)
 
     async def on_shutdown(self) -> None:
-        """Shutdown event handler. Close the database connection pool."""
-        await self.get_db().close_connection()
+        """Shutdown event handler. Close the database connections."""
+        await Tortoise.close_connections()
 
     async def server_error(self, request, exc) -> HTMLResponse:
         """Handle internal server error (500) responses."""
@@ -74,12 +66,7 @@ class Guitarlette(Starlette):
 
 
 app = Guitarlette(
-    config={
-        "DEBUG": True,
-        "TEMPLATE_DIR": "templates",
-        "STATIC_DIR": "static",
-        "DB_CONNECTION": Connection(db_config=DB_CONFIG),
-    }
+    config={"DEBUG": True, "TEMPLATE_DIR": "templates", "STATIC_DIR": "static"}
 )
 
 
@@ -90,7 +77,7 @@ class Homepage(TemplateEndpoint):
 
     async def get_context(self, request) -> dict:
         context = await super().get_context(request)
-        songs = await SongQuery(app.get_db()).list()
+        songs = await Song.all()
         context["songs"] = songs
         return context
 

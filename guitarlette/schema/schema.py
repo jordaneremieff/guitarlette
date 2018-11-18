@@ -1,10 +1,6 @@
 import graphene
 
-from guitarlette.database.connection import Connection
-from guitarlette.database.models import SongQuery
-from guitarlette.config import DB_CONFIG
-
-db = Connection(db_config=DB_CONFIG)
+from guitarlette.models import Song  # , Notebook
 
 
 class SongType(graphene.ObjectType):
@@ -21,7 +17,7 @@ class CreateSongMutation(graphene.Mutation):
     song = graphene.Field(SongType)
 
     async def mutate(self, info, name, content):
-        song = await SongQuery(db).create(name=name, content=content)
+        song = await Song.create(name=name, content=content)
         return CreateSongMutation(song=song)
 
 
@@ -33,7 +29,7 @@ class UpdateSongMutation(graphene.Mutation):
     song = graphene.Field(SongType)
 
     async def mutate(self, info, id, name):
-        song = await SongQuery(db).update(id=id, name=name)
+        song = await Song.update(id=id, name=name)
         return UpdateSongMutation(song=song)
 
 
@@ -48,11 +44,11 @@ class Query(graphene.ObjectType):
     song = graphene.Field(SongType, id=graphene.Int())
 
     async def resolve_all_songs(self, info):
-        songs = await SongQuery(db).list()
+        songs = await Song.all()
         return songs
 
     async def resolve_song(self, info, id):
-        song = await SongQuery(db).get(id=id)
+        song = await Song.get(id=id)
         return song
 
 
