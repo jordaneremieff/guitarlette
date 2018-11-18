@@ -1,9 +1,15 @@
 import asyncio
 import asyncpg
 
+from guitarlette.config import DB_CONFIG
+
 
 async def main():
-    conn = await asyncpg.connect("postgresql://postgres@localhost/guitarlette")
+    conn = await asyncpg.connect(
+        f"postgresql://postgres@localhost/{DB_CONFIG['database']}",
+        user=DB_CONFIG["user"],
+        password=DB_CONFIG["password"],
+    )
     await conn.execute(
         """
         CREATE TABLE song(

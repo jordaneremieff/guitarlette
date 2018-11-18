@@ -26,7 +26,6 @@ class SongQuery:
             return None
 
         if many:
-
             return [self.serialize(row) for row in res]
 
         return self.serialize(res)

@@ -14,21 +14,21 @@ async def get_connection(pool):
 
 
 class Connection:
-    def __init__(self, database: str) -> None:
-        self.database = database
-        self.config = {"pool": None}
+    def __init__(self, db_config: dict) -> None:
+        self.db_config = db_config
+        self.conn = {"pool": None}
 
     async def get_pool(self):
-        if self.config["pool"] is None:
+        if self.conn["pool"] is None:
             await self.create_connection()
-        return self.config["pool"]
+        return self.conn["pool"]
 
     async def create_connection(self) -> None:
 
-        self.config["pool"] = await asyncpg.create_pool(database=self.database)
+        self.conn["pool"] = await asyncpg.create_pool(**self.db_config)
 
     async def close_connection(self) -> None:
-        await self.config["pool"].close()
+        await self.conn["pool"].close()
 
     async def perform(self, query: Callable):
 
