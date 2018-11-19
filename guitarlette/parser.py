@@ -1,7 +1,7 @@
 from pychord import Chord
 from dataclasses import dataclass
 from typing import List
-from functools import partial
+
 
 CONTENT = """
 Am D C Fm
@@ -13,6 +13,10 @@ G Em C D
 sdfsdfsdfsdf
 """
 
+HTML = """
+
+"""
+
 
 @dataclass
 class SongRowItem:
@@ -22,7 +26,14 @@ class SongRowItem:
 
     def format_html(self):
         if self.is_chord:
-            self.content = f"<span style='font-weight:bold;'>{self.content}</span>"
+            self.content = "".join(
+                [
+                    "<span style='font-weight:bold;' class=",
+                    self.chord.chord,
+                    self.content,
+                    "</span>",
+                ]
+            )
 
     def transpose(self, n: int) -> None:
         if self.is_chord:
@@ -48,6 +59,17 @@ class SongContent:
 
     def transpose(self, n: int) -> None:
         self._apply_method("transpose", n)
+
+    @property
+    def html(self):
+        content = []
+
+        for row in self.rows:
+            row_content = "".join([item.content for item in row])
+            content.append(row_content)
+
+        content = "<br>".join(content)
+        return content
 
     # @property
     # def get_fingerings(self):
@@ -81,4 +103,4 @@ print(song)
 song.transpose(5)
 print(song)
 song.format_html()
-print(song)
+print(song.html)
