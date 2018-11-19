@@ -16,6 +16,8 @@
 
      <script>
 
+        const ws = new WebSocket("{{ WEBSOCKET_URL }}");
+
         function saveSong() {
 
             name = document.getElementById("song-name").value

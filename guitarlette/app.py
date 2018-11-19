@@ -17,6 +17,11 @@ from guitarlette.config import Config
 from pychord import Chord
 
 
+def chord_parser(content):
+
+    print(content)
+
+
 class Guitarlette(Starlette):
     """
     Implements various project-specific defaults and configuration by overriding the
@@ -97,7 +102,7 @@ class Composer(TemplateEndpoint):
 
     async def get_context(self, request) -> dict:
         context = await super().get_context(request)
-        context["WEBSOCKET_URL"] = "ws://127.0.0.1:5000/ws"
+        context["WEBSOCKET_URL"] = "ws://127.0.0.1:8000/ws"
         return context
 
 
@@ -106,8 +111,8 @@ class GraphQLWebSocket(WebSocketEndpoint):
 
     encoding = "text"
 
-    async def on_receive(self, websocket, data):
-        data = json.loads(data)
+    async def on_receive(self, websocket, request_data):
+        variables = json.loads(request_data)
         mutation = """
             mutation createSong($name: String!, $content: String!) {
               createSong(name: $name, content: $content) {
@@ -119,7 +124,12 @@ class GraphQLWebSocket(WebSocketEndpoint):
               }
             }
         """
-        await self.scope["app"].graphql_app.execute(query=mutation, variables=data)
+        res = await self.scope["app"].graphql_app.execute(
+            query=mutation, variables=variables
+        )
+        content = res.data["createSong"]["song"]["content"]
+        parsed = chord_parser(content)
+        print(parsed)
 
         # TODO: Parse the mutation result and assign chord values where they can be
         # detected, then return that in the WS response.
