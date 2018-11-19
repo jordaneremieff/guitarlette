@@ -13,10 +13,6 @@ G Em C D
 sdfsdfsdfsdf
 """
 
-HTML = """
-
-"""
-
 
 @dataclass
 class SongRowItem:
@@ -24,7 +20,7 @@ class SongRowItem:
     content: str
     chord: Chord = None
 
-    def format_html(self):
+    def format_html(self) -> None:
         if self.is_chord:
             self.content = "".join(
                 [
@@ -61,7 +57,7 @@ class SongContent:
         self._apply_method("transpose", n)
 
     @property
-    def html(self):
+    def html(self) -> str:
         content = []
 
         for row in self.rows:
@@ -76,24 +72,24 @@ class SongContent:
     #     return self._get_fingerings
 
 
-def parse_chord(element):
+def parse_chord(item_content: str) -> SongRowItem:
     try:
-        chord = Chord(element)
+        chord = Chord(item_content)
     except ValueError:
         chord = None
-    return SongRowItem(content=element, chord=chord)
+    return SongRowItem(content=item_content, chord=chord)
 
 
-def parse_row(row):
+def parse_row(row: str) -> list:
     row = [parse_chord(i) for i in row.split(" ")]
     return row
 
 
-def song_parser(raw_data):
+def song_parser(raw_data: str) -> SongContent:
     raw_data = [i for i in raw_data.strip().split("\n") if i]
     rows = [parse_row(row) for row in raw_data]
-    content = SongContent(rows=rows)
-    return content
+    song_content = SongContent(rows=rows)
+    return song_content
 
 
 song = song_parser(CONTENT)
