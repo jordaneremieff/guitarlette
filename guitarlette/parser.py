@@ -24,10 +24,8 @@ class SongRowItem:
         if self.is_chord:
             self.content = "".join(
                 [
-                    "<span style='font-weight:bold;' class=",
-                    self.chord.chord,
-                    self.content,
-                    "</span>",
+                    f"<span style='font-weight:bold;' class='{self.chord}'>",
+                    f"{self.content}</span>",
                 ]
             )
 
@@ -58,6 +56,7 @@ class SongContent:
 
     @property
     def html(self) -> str:
+        self.format_html()
         content = []
 
         for row in self.rows:
@@ -92,11 +91,11 @@ def song_parser(raw_data: str) -> SongContent:
     return song_content
 
 
-song = song_parser(CONTENT)
+# song = song_parser(CONTENT)
 
-song.transpose(3)
-print(song)
-song.transpose(5)
-print(song)
-song.format_html()
-print(song.html)
+# song.transpose(3)
+# print(song)
+# song.transpose(5)
+# print(song)
+# song.format_html()
+# print(song.html)

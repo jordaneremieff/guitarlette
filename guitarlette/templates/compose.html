@@ -18,6 +18,16 @@
 
         const ws = new WebSocket("{{ WEBSOCKET_URL }}");
 
+        ws.onmessage = function(msg) {
+
+
+            data = JSON.parse(msg.data);
+            console.log(data.content);
+            songViewer = document.getElementById("song-viewer")
+            songViewer.innerHTML = data.content
+   
+        };
+
         function saveSong() {
 
             name = document.getElementById("song-name").value
