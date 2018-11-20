@@ -1,8 +1,33 @@
 # guitarlette
 
-A songwriting tool for guitarists / experiment into various async tools.
+Work in progress.
 
-***Work in progress***
+**Requirements**: Python 3.7+
+
+## What?
+
+This an attempt to write my ideal songwriting for guitar as well as an experiment using a few different libraries that I find interesting. It relies heavily on [Starlette](https://github.com/encode/starlette), [Tortoise ORM](https://github.com/tortoise/tortoise-orm), and [graphene](https://github.com/graphql-python/graphene).
+
+## Setup
+
+```
+# Setup the dev environment and install the dependencies
+./scripts setup
+
+# Active the virtualenv
+. venv/bin/activate
+
+# Create the database
+python guitarlette/init_db.py
+```
+
+## Running
+
+```
+uvicorn guitarlette.app:app --debug
+```
+
+Then visit `http://localhost:8000/compose` to try creating a song.
 
 ## Ideas
 
@@ -13,3 +38,5 @@ A songwriting tool for guitarists / experiment into various async tools.
 - Chord dropdowns on each parsed chord in the viewer
 - Voice control via microphone of viewer behaviour
 - Metronome, etc.
+- Tuner
+- Generators

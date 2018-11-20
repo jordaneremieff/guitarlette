@@ -7,7 +7,7 @@ from guitarlette.models import Song
 from guitarlette.parser import SongParser
 from guitarlette.config import Config
 from guitarlette.application import Guitarlette
-from guitarlette.local_settings import DEBUG, TEMPLATE_DIR, STATIC_DIR, DATABASE
+from guitarlette.app.settings import DEBUG, TEMPLATE_DIR, STATIC_DIR, DATABASE
 
 
 config = Config(

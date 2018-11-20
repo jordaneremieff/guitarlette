@@ -3,7 +3,7 @@ import os
 import contextlib
 
 from tortoise import Tortoise, run_async
-from guitarlette.local_settings import DATABASE, DATABASE_NAME
+from guitarlette.app.settings import DATABASE, DATABASE_NAME
 
 
 async def init():
