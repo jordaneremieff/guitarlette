@@ -12,7 +12,7 @@
     <h1>Composer</h1>
     <div id="song-viewer">{% if song_id %}{{ song_html|safe }}{% endif %}</div>
 
-    Name: <input type="text" id="song-name">{% if song_name %}{{ song_name }}{% endif %}</input><br>
+    Name: <input type="text" id="song-name" {% if song_name %}value="{{ song_name }}"{% endif %}></input><br>
     Content: <textarea id="song-content" is="song-composer" rows="20" cols="100">{% if song_content %}{{ song_content }}{% endif %}</textarea><br>
     <button onClick="saveSong()">Save</button>
 
