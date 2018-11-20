@@ -91,12 +91,20 @@ class Homepage(TemplateEndpoint):
 
 
 @app.route("/compose")
+@app.route("/compose/{song_id:int}")
 class Composer(TemplateEndpoint):
 
     template_name = "compose.html"
 
     async def get_context(self, request) -> dict:
         context = await super().get_context(request)
+        if "song_id" in request.path_params:
+            song = await Song.get(id=request.path_params["song_id"])
+            song_parser = SongParser(raw_data=song.content)
+            context["song_id"] = song.id
+            context["song_name"] = song.name
+            context["song_content"] = song.content
+            context["song_html"] = song_parser.html
         context["WEBSOCKET_URL"] = "ws://127.0.0.1:8000/ws"
         return context
 
