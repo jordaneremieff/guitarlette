@@ -5,12 +5,10 @@
     </head>
     <body>
         <h1>Home</h1>
-        {% if song_list %}
-            {% for song in song_list %}
-                {{ song.id }}
-                {{ song.name }}
+        {% if songs %}
+            {% for song in songs %}
+                <a href="/compose/{{ song.id }}">{{ song.name }}</a><br>
             {% endfor %}
         {% endif %}
-
     </body>
 </html>
