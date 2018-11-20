@@ -1,9 +1,10 @@
+from dataclasses import dataclass, field
+
+
+@dataclass
 class Config:
 
     DEBUG: bool = False
-    DATABASE: dict = {
-        "db_url": "sqlite://guitarlette.db",
-        "modules": {"models": ["guitarlette.models"]},
-    }
-    TEMPLATE_DIR = "templates"
-    STATIC_DIR = "static"
+    DATABASE: dict = field(default_factory=dict)
+    TEMPLATE_DIR: str = None
+    STATIC_DIR: str = None

@@ -1,5 +1,5 @@
-import uvicorn
 import json
+
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
 from starlette.responses import HTMLResponse
@@ -12,9 +12,10 @@ from graphql.execution.executors.asyncio import AsyncioExecutor
 from guitarlette.schema import schema
 from guitarlette.endpoints import TemplateEndpoint
 from guitarlette.models import Song
+from guitarlette.parser import SongParser
 from guitarlette.config import Config
 
-from guitarlette.parser import SongParser
+from guitarlette.local_settings import DEBUG, TEMPLATE_DIR, STATIC_DIR, DATABASE
 
 
 class Guitarlette(Starlette):
@@ -75,7 +76,11 @@ class Guitarlette(Starlette):
         return self.get_exception_response(request, 404)
 
 
-app = Guitarlette(config=Config())
+config = Config(
+    DEBUG=DEBUG, TEMPLATE_DIR=TEMPLATE_DIR, STATIC_DIR=STATIC_DIR, DATABASE=DATABASE
+)
+
+app = Guitarlette(config=config)
 
 
 @app.route("/")
