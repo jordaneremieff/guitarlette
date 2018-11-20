@@ -6,7 +6,7 @@ Work in progress.
 
 ## What?
 
-This an attempt to write my ideal songwriting for guitar as well as an experiment using a few different libraries that I find interesting. It relies heavily on [Starlette](https://github.com/encode/starlette), [Tortoise ORM](https://github.com/tortoise/tortoise-orm), and [graphene](https://github.com/graphql-python/graphene).
+This an attempt to write my ideal songwriting app for guitar as well as an experiment using a few different libraries that I find interesting. It relies heavily on [Starlette](https://github.com/encode/starlette), [Tortoise ORM](https://github.com/tortoise/tortoise-orm), and [Graphene](https://github.com/graphql-python/graphene).
 
 ## Setup
 
