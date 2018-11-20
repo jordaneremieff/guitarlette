@@ -3,17 +3,6 @@ from dataclasses import dataclass, field
 from typing import List, Union
 
 
-CONTENT = """
-Am D C Fm
-
-Testing testing test ttest etst
-
-G Em C D
-
-sdfsdfsdfsdf
-"""
-
-
 @dataclass
 class SongToken:
 
@@ -38,7 +27,7 @@ class SongChord(SongToken):
 
 
 @dataclass
-class SongContent:
+class SongParser:
 
     raw_data: str
     rows: List[List[Union[SongToken, SongChord]]] = field(
@@ -68,15 +57,34 @@ class SongContent:
     def html(self) -> str:
         content = "".join(
             [
-                f"<div class='row'>{''.join([token.html for token in row])}</div>"
+                f"<div class='row'>{' '.join([token.html for token in row])}</div>"
                 for row in self.rows
             ]
         )
         return content
 
 
-song = SongContent(raw_data=CONTENT)
-song.transpose(3)
-print(song)
-song.transpose(5)
-print(song.html)
+if __name__ == "__main__":
+    test = """
+    G                Em
+    What a beautiful face
+                         C
+    I have found in this place,
+                     D
+    that is circling all around the sun
+    G                Em
+    What a beautiful dream
+                            C
+    that could flash on the screen
+                     D                    G
+    in a blink of an eye and be gone from me,
+              Em
+    soft and sweet,
+             C               D                 G Em C D
+    let me hold it close and keep it here with me
+    """
+    song = SongParser(raw_data=test)
+    song.transpose(3)
+    print(song)
+    song.transpose(5)
+    print(song.html)

@@ -14,7 +14,7 @@ from guitarlette.endpoints import TemplateEndpoint
 from guitarlette.models import Song
 from guitarlette.config import Config
 
-from guitarlette.parser import song_parser
+from guitarlette.parser import SongParser
 
 
 class Guitarlette(Starlette):
@@ -123,15 +123,6 @@ class GraphQLWebSocket(WebSocketEndpoint):
             query=mutation, variables=variables
         )
         content = res.data["createSong"]["song"]["content"]
-        parsed = song_parser(content)
-        html = parsed.html
+        song_parser = SongParser(raw_data=content)
 
-        await websocket.send_text(json.dumps({"content": html}))
-
-        # TODO: Parse the mutation result and assign chord values where they can be
-        # detected, then return that in the WS response.
-        # Once the chords are parsed we can then do all sorts of things.
-
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5000, debug=True)
+        await websocket.send_text(json.dumps({"content": song_parser.html}))
