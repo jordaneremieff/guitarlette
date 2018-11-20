@@ -1,6 +1,6 @@
 from pychord import Chord
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
+from typing import List, Union
 
 
 CONTENT = """
@@ -15,87 +15,68 @@ sdfsdfsdfsdf
 
 
 @dataclass
-class SongRowItem:
+class SongToken:
 
     content: str
-    chord: Chord = None
-
-    def format_html(self) -> None:
-        if self.is_chord:
-            self.content = "".join(
-                [
-                    f"<span style='font-weight:bold;' class='{self.chord}'>",
-                    f"{self.content}</span>",
-                ]
-            )
-
-    def transpose(self, n: int) -> None:
-        if self.is_chord:
-            self.chord.transpose(n)
 
     @property
-    def is_chord(self) -> bool:
-        return self.chord is not None
+    def html(self) -> str:
+        return self.content
+
+
+@dataclass
+class SongChord(SongToken):
+
+    chord: Chord
+
+    @property
+    def html(self) -> str:
+        return f"<span class='chord {self.chord}'>{self.content}</span>"
+
+    def transpose(self, n: int) -> None:
+        self.chord.transpose(n)
 
 
 @dataclass
 class SongContent:
 
-    rows: List[List]
+    raw_data: str
+    rows: List[List[Union[SongToken, SongChord]]] = field(
+        default_factory=list, init=False
+    )
 
-    def _apply_method(self, method: str, *args, **kwargs) -> None:
-        for row in self.rows:
-            for item in row:
-                getattr(item, method)(*args, **kwargs)
+    def __post_init__(self):
+        self.rows = [
+            [self.parse_token(i) for i in row.split(" ")]
+            for row in [i for i in self.raw_data.strip().split("\n") if i]
+        ]
 
-    def format_html(self) -> None:
-        self._apply_method("format_html")
+    def parse_token(self, token: str) -> Union[SongToken, SongChord]:
+        try:
+            chord = Chord(token)
+        except ValueError:
+            return SongToken(content=token)
+        return SongChord(content=token, chord=chord)
+
+    def _apply(self, method: str, *args, **kwargs) -> None:
+        (getattr(item, method)(*args, **kwargs) for item in (row for row in self.rows))
 
     def transpose(self, n: int) -> None:
-        self._apply_method("transpose", n)
+        self._apply("transpose", n)
 
     @property
     def html(self) -> str:
-        self.format_html()
-        content = []
-
-        for row in self.rows:
-            row_content = "".join([item.content for item in row])
-            content.append(row_content)
-
-        content = "<br>".join(content)
+        content = "".join(
+            [
+                f"<div class='row'>{''.join([token.html for token in row])}</div>"
+                for row in self.rows
+            ]
+        )
         return content
 
-    # @property
-    # def get_fingerings(self):
-    #     return self._get_fingerings
 
-
-def parse_chord(item_content: str) -> SongRowItem:
-    try:
-        chord = Chord(item_content)
-    except ValueError:
-        chord = None
-    return SongRowItem(content=item_content, chord=chord)
-
-
-def parse_row(row: str) -> list:
-    row = [parse_chord(i) for i in row.split(" ")]
-    return row
-
-
-def song_parser(raw_data: str) -> SongContent:
-    raw_data = [i for i in raw_data.strip().split("\n") if i]
-    rows = [parse_row(row) for row in raw_data]
-    song_content = SongContent(rows=rows)
-    return song_content
-
-
-# song = song_parser(CONTENT)
-
-# song.transpose(3)
-# print(song)
-# song.transpose(5)
-# print(song)
-# song.format_html()
-# print(song.html)
+song = SongContent(raw_data=CONTENT)
+song.transpose(3)
+print(song)
+song.transpose(5)
+print(song.html)
