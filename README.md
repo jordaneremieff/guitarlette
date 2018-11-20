@@ -27,7 +27,7 @@ python guitarlette/init_db.py
 uvicorn guitarlette.app:app --debug
 ```
 
-Then visit `http://localhost:8000/compose` to try creating a song.
+Then visit `http://localhost:8000/compose` to try creating a song. Additionally, you can use the GraphiQL console at `http://localhost:8000/graphql`.
 
 ## Ideas
 
