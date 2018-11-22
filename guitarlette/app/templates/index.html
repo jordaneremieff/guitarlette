@@ -4,7 +4,9 @@
         <title>guitarlette</title>
     </head>
     <body>
-        <h1>Home</h1>
+        <h1>guitarlette</h1>
+        <a href="/compose">New</a><br>
+
         {% if songs %}
             {% for song in songs %}
                 <a href="/compose/{{ song.id }}">{{ song.name }}</a><br>

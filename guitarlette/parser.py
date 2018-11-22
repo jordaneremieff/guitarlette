@@ -23,8 +23,8 @@ class SongChord(SongToken):
         return f"<span class='chord {self.chord}'>{self.content}</span>"
 
     def transpose(self, n: int) -> None:
-        """Transpose the current chord."""
         self.chord.transpose(n)
+        self.content = str(self.chord)
 
 
 @dataclass
@@ -49,15 +49,12 @@ class SongParser:
         return SongChord(content=token, chord=chord)
 
     def _apply(self, method: str, *args, **kwargs) -> None:
-        """Apply a method to all the identified chords."""
-        (
-            getattr(token, method)(*args, **kwargs)
-            for token in (row for row in self.rows)
-            if hasattr("chord", token)
-        )
+        for row in self.rows:
+            for token in row:
+                if hasattr(token, "chord"):
+                    getattr(token, method)(*args, **kwargs)
 
     def transpose(self, n: int) -> None:
-        """Transpose the entire song."""
         self._apply("transpose", n)
 
     @property
@@ -92,6 +89,6 @@ if __name__ == "__main__":
     """
     song = SongParser(raw_data=test)
     song.transpose(3)
-    print(song)
+    print(song.html)
     song.transpose(5)
     print(song.html)
