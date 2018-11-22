@@ -12,11 +12,14 @@
 
 <body>
     <h1>Composer</h1>
-    <div id="song-viewer">{% if song_id %}{{ song_parser|safe }}{% endif %}</div>
+    <div id="song-viewer">{% if song_id %}{{ song_parser.html|safe }}{% endif %}</div>
+
     Name: <input type="text" id="song-name" {% if song_name %}value="{{ song_name }}" {% endif %}></input><br>
-    Content: <textarea id="song-content" is="song-composer" rows="20" cols="100">{% if song_content %}{{ song_content }}{% endif %}</textarea><br>
-    <button onClick="saveSong()">Save</button>
-    <button onClick="transposeSong()">Transpose</button>
+    Content: <textarea id="song-content" rows="20" cols="100">{% if song_content %}{{ song_content }}{% endif %}</textarea>
+    <br>
+
+    <button onClick="saveSong()">Save</button><br>
+    <input id="transpose-degree" value="1"></input><button onClick="transposeSong()">Transpose</button>
     <script>
     const ws = new WebSocket("{{ WEBSOCKET_URL }}");
 
@@ -29,9 +32,11 @@
 
     function transposeSong() {
         content = document.getElementById("song-content").value
+        degree = document.getElementById("transpose-degree").value
         ws.send(JSON.stringify({
             "type": "song.transpose",
-            "content": content
+            "content": content,
+            "degree": degree
         }))
     }
 

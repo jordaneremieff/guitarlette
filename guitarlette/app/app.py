@@ -57,8 +57,9 @@ class GraphQLWebSocket(WebSocketEndpoint):
         message_type = message.pop("type")
         if message_type == "song.transpose":
             content = message["content"]
+            degree = int(message["degree"])
             song_parser = SongParser(raw_data=content)
-            song_parser.transpose(3)
+            song_parser.transpose(degree)
 
         elif message_type == "song.save":
             mutation = """
