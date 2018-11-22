@@ -8,7 +8,7 @@ from guitarlette.parser import SongParser
 from guitarlette.config import Config
 from guitarlette.application import Guitarlette
 from guitarlette.app.settings import DEBUG, TEMPLATE_DIR, STATIC_DIR, DATABASE
-
+from guitarlette.schema.queries import CREATE_SONG_MUTATION, UPDATE_SONG_MUTATION
 
 config = Config(
     DEBUG=DEBUG, TEMPLATE_DIR=TEMPLATE_DIR, STATIC_DIR=STATIC_DIR, DATABASE=DATABASE
@@ -60,23 +60,22 @@ class GraphQLWebSocket(WebSocketEndpoint):
             degree = int(message["degree"])
             song_parser = SongParser(raw_data=content)
             song_parser.transpose(degree)
+        else:
+            mutation_type = message_type.split(".")[1]
 
-        elif message_type == "song.save":
-            mutation = """
-                mutation createSong($name: String!, $content: String!) {
-                  createSong(name: $name, content: $content) {
-                    song {
-                      id
-                      name
-                      content
-                    }
-                  }
-                }
-            """
+            if message_type == "song.create":
+                mutation = CREATE_SONG_MUTATION
+
+            elif message_type == "song.update":
+                mutation = UPDATE_SONG_MUTATION
+
             res = await self.scope["app"].graphql_app.execute(
                 query=mutation, variables=message
             )
-            content = res.data["createSong"]["song"]["content"]
+            content = res.data[f"{mutation_type}Song"]["song"]["content"]
+
             song_parser = SongParser(raw_data=content)
 
-        await websocket.send_text(json.dumps({"content": song_parser.html}))
+        await websocket.send_text(
+            json.dumps({"raw_data": song_parser.raw_data, "content": song_parser.html})
+        )

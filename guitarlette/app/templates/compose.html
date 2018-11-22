@@ -18,16 +18,21 @@
     Content: <textarea id="song-content" rows="20" cols="100">{% if song_content %}{{ song_content }}{% endif %}</textarea>
     <br>
 
-    <button onClick="saveSong()">Save</button><br>
+    <button onClick="{% if song_id %}updateSong(){% else %}saveSong(){% endif %}">Save</button><br>
     <input id="transpose-degree" value="1"></input><button onClick="transposeSong()">Transpose</button>
     <script>
     const ws = new WebSocket("{{ WEBSOCKET_URL }}");
+    const songId = {% if song_id %}{{ song_id }}{% endif %}
+
 
     ws.onmessage = function(msg) {
         data = JSON.parse(msg.data);
-        console.log(data.content);
         songViewer = document.getElementById("song-viewer")
         songViewer.innerHTML = data.content
+
+        songContent = document.getElementById("song-content")
+        songContent.innerHTML = data.raw_data
+        console.log(data);
     };
 
     function transposeSong() {
@@ -40,11 +45,25 @@
         }))
     }
 
-    function saveSong() {
+    function createSong() {
         name = document.getElementById("song-name").value
         content = document.getElementById("song-content").value
+        mutation = 
         ws.send(JSON.stringify({
-            "type": "song.save",
+            "type": "song.create",
+            "id": songId,
+            "name": name,
+            "content": content
+        }))
+    }
+
+    function updateSong() {
+        name = document.getElementById("song-name").value
+        content = document.getElementById("song-content").value
+        mutation = 
+        ws.send(JSON.stringify({
+            "type": "song.update",
+            "id": songId,
             "name": name,
             "content": content
         }))

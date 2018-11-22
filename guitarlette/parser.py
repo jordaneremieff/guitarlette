@@ -49,10 +49,19 @@ class SongParser:
         return SongChord(content=token, chord=chord)
 
     def _apply(self, method: str, *args, **kwargs) -> None:
+        new_raw_data = []
+
         for row in self.rows:
+            new_row = []
             for token in row:
                 if hasattr(token, "chord"):
                     getattr(token, method)(*args, **kwargs)
+
+                new_row.append(token.content)
+
+            new_raw_data.append(" ".join(new_row))
+
+        self.raw_data = "\n".join(new_raw_data)
 
     def transpose(self, n: int) -> None:
         self._apply("transpose", n)
