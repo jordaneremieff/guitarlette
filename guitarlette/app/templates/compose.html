@@ -48,10 +48,8 @@
     function createSong() {
         name = document.getElementById("song-name").value
         content = document.getElementById("song-content").value
-        mutation = 
         ws.send(JSON.stringify({
             "type": "song.create",
-            "id": songId,
             "name": name,
             "content": content
         }))
@@ -60,7 +58,6 @@
     function updateSong() {
         name = document.getElementById("song-name").value
         content = document.getElementById("song-content").value
-        mutation = 
         ws.send(JSON.stringify({
             "type": "song.update",
             "id": songId,
