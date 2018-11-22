@@ -42,7 +42,7 @@ class Composer(TemplateEndpoint):
             context["song_id"] = song.id
             context["song_name"] = song.name
             context["song_content"] = song.content
-            context["song_html"] = song_parser.html
+            context["song_parser"] = song_parser
         context["WEBSOCKET_URL"] = "ws://127.0.0.1:8000/ws"
         return context
 
@@ -52,23 +52,30 @@ class GraphQLWebSocket(WebSocketEndpoint):
 
     encoding = "text"
 
-    async def on_receive(self, websocket, request_data):
-        variables = json.loads(request_data)
-        mutation = """
-            mutation createSong($name: String!, $content: String!) {
-              createSong(name: $name, content: $content) {
-                song {
-                  id
-                  name
-                  content
+    async def on_receive(self, websocket, message):
+        message = json.loads(message)
+        message_type = message.pop("type")
+        if message_type == "song.transpose":
+            content = message["content"]
+            song_parser = SongParser(raw_data=content)
+            song_parser.transpose(3)
+
+        elif message_type == "song.save":
+            mutation = """
+                mutation createSong($name: String!, $content: String!) {
+                  createSong(name: $name, content: $content) {
+                    song {
+                      id
+                      name
+                      content
+                    }
+                  }
                 }
-              }
-            }
-        """
-        res = await self.scope["app"].graphql_app.execute(
-            query=mutation, variables=variables
-        )
-        content = res.data["createSong"]["song"]["content"]
-        song_parser = SongParser(raw_data=content)
+            """
+            res = await self.scope["app"].graphql_app.execute(
+                query=mutation, variables=message
+            )
+            content = res.data["createSong"]["song"]["content"]
+            song_parser = SongParser(raw_data=content)
 
         await websocket.send_text(json.dumps({"content": song_parser.html}))

@@ -1,41 +1,50 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>guitarlette</title>
     <style>
-    .chord {
+        .chord {
         font-weight: bold;
     }
     </style>
 </head>
+
 <body>
     <h1>Composer</h1>
-    <div id="song-viewer">{% if song_id %}{{ song_html|safe }}{% endif %}</div>
-
-    Name: <input type="text" id="song-name" {% if song_name %}value="{{ song_name }}"{% endif %}></input><br>
+    <div id="song-viewer">{% if song_id %}{{ song_parser|safe }}{% endif %}</div>
+    Name: <input type="text" id="song-name" {% if song_name %}value="{{ song_name }}" {% endif %}></input><br>
     Content: <textarea id="song-content" is="song-composer" rows="20" cols="100">{% if song_content %}{{ song_content }}{% endif %}</textarea><br>
     <button onClick="saveSong()">Save</button>
+    <button onClick="transposeSong()">Transpose</button>
+    <script>
+    const ws = new WebSocket("{{ WEBSOCKET_URL }}");
 
+    ws.onmessage = function(msg) {
+        data = JSON.parse(msg.data);
+        console.log(data.content);
+        songViewer = document.getElementById("song-viewer")
+        songViewer.innerHTML = data.content
+    };
 
-     <script>
+    function transposeSong() {
+        content = document.getElementById("song-content").value
+        ws.send(JSON.stringify({
+            "type": "song.transpose",
+            "content": content
+        }))
+    }
 
-        const ws = new WebSocket("{{ WEBSOCKET_URL }}");
-
-        ws.onmessage = function(msg) {
-            data = JSON.parse(msg.data);
-            console.log(data.content);
-            songViewer = document.getElementById("song-viewer")
-            songViewer.innerHTML = data.content
-        };
-
-        function saveSong() {
-            name = document.getElementById("song-name").value
-            content = document.getElementById("song-content").value
-            ws.send(JSON.stringify({
-                "name": name,
-                "content": content
-            }))
-        }
+    function saveSong() {
+        name = document.getElementById("song-name").value
+        content = document.getElementById("song-content").value
+        ws.send(JSON.stringify({
+            "type": "song.save",
+            "name": name,
+            "content": content
+        }))
+    }
     </script>
 </body>
+
 </html>
