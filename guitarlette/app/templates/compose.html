@@ -1,25 +1,57 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>guitarlette</title>
     <style>
-        .chord {
+    body {
+        font-family: monospace; 
+    }
+    .chord {
         font-weight: bold;
+    }
+    .editor-input {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
+    .editor-label {
+        margin-bottom: 0.5em;
+    }
+    .viewer {
+        margin-top: 1em;
+    }
+    label {
+        display: block;
+    }
+    textarea {
+        display: block;
+
+    }
+    button {
+        display: inline-block;
     }
     </style>
 </head>
-
 <body>
-    <h1>Composer</h1>
-    <div id="song-viewer">{% if song_id %}{{ song_parser.html|safe }}{% endif %}</div>
+<h1>Composer</h1>
+    
+    <div class="editor-input">
+        <label class="editor-label" for="song-name">Name</label>
+        <input type="text" id="song-name" {% if song_name %}value="{{ song_name }}" {% endif %}></input>
+    </div>
 
-    Name: <input type="text" id="song-name" {% if song_name %}value="{{ song_name }}" {% endif %}></input><br>
-    Content: <textarea id="song-content" rows="20" cols="100">{% if song_content %}{{ song_content }}{% endif %}</textarea>
-    <br>
+    <div class="editor-input">
+        <label class="editor-label" for="song-content">Content</label>
+        <textarea id="song-content" rows="20" cols="100">{% if song_content %}{{ song_content }}{% endif %}</textarea>
+    </div>
 
-    <button onClick="{% if song_id %}updateSong(){% else %}saveSong(){% endif %}">Save</button><br>
-    <input id="transpose-degree" value="1"></input><button onClick="transposeSong()">Transpose</button>
+    <input id="transpose-degree" value="1"></input>
+    <button onClick="transposeSong()">Transpose</button>
+    <button onClick="{% if song_id %}updateSong(){% else %}saveSong(){% endif %}">Save</button>
+
+    <div class="viewer">
+        <div id="song-viewer">{% if song_id %}{{ song_parser.html|safe }}{% endif %}</div>
+    </div>
+
     <script>
     const ws = new WebSocket("{{ WEBSOCKET_URL }}");
     const songId = {% if song_id %}{{ song_id }}{% endif %}
