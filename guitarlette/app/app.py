@@ -5,15 +5,12 @@ from starlette.endpoints import WebSocketEndpoint
 from guitarlette.endpoints import TemplateEndpoint
 from guitarlette.models import Song
 from guitarlette.parser import SongParser
-from guitarlette.config import Config
 from guitarlette.application import Guitarlette
-from guitarlette.app.settings import DEBUG, TEMPLATE_DIR, STATIC_DIR, DATABASE
+from guitarlette.app.settings import Config
 from guitarlette.schema.queries import CREATE_SONG_MUTATION, UPDATE_SONG_MUTATION
 
-config = Config(
-    DEBUG=DEBUG, TEMPLATE_DIR=TEMPLATE_DIR, STATIC_DIR=STATIC_DIR, DATABASE=DATABASE
-)
-app = Guitarlette(config=config)
+
+app = Guitarlette(config=Config())
 
 
 @app.route("/")
@@ -43,7 +40,7 @@ class Composer(TemplateEndpoint):
             context["song_name"] = song.name
             context["song_content"] = song.content
             context["song_parser"] = song_parser
-        context["WEBSOCKET_URL"] = "ws://127.0.0.1:8000/ws"
+        context["WEBSOCKET_URL"] = app.config.WEBSOCKET_URL
         return context
 
 

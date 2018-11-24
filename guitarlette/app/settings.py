@@ -1,16 +1,21 @@
 import os
 
-APP_DIR = os.path.dirname(os.path.realpath(__file__))
 
-DEBUG = True
+class Config:
 
-DATABASE_NAME = "app"
+    APP_DIR = os.path.dirname(os.path.realpath(__file__))
 
-DATABASE = {
-    "db_url": f"sqlite://{DATABASE_NAME}.db",
-    "modules": {"models": ["guitarlette.models"]},
-}
+    DEBUG = True
 
-TEMPLATE_DIR = os.path.join(APP_DIR, "templates")
+    DATABASE_NAME = "app"
 
-STATIC_DIR = os.path.join(APP_DIR, "static")
+    DATABASE = {
+        "db_url": f"sqlite://{DATABASE_NAME}.db",
+        "modules": {"models": ["guitarlette.models"]},
+    }
+
+    TEMPLATE_DIR = os.path.join(APP_DIR, "templates")
+
+    STATIC_DIR = os.path.join(APP_DIR, "static")
+
+    WEBSOCKET_URL = "ws://127.0.0.1:8000/ws"

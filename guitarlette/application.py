@@ -7,11 +7,10 @@ from starlette.responses import HTMLResponse
 from starlette.graphql import GraphQLApp
 
 from guitarlette.schema import schema
-from guitarlette.config import Config
 
 
 class Guitarlette(Starlette):
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config) -> None:
         super().__init__(debug=config.DEBUG, template_directory=config.TEMPLATE_DIR)
         self.config = config
         self.graphql_app = GraphQLApp(schema=schema, executor=AsyncioExecutor())
