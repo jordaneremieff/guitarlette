@@ -10,6 +10,8 @@ class SongToken:
 
     @property
     def html(self) -> str:
+        if not self.content:
+            return "&nbsp;"
         return self.content
 
 
