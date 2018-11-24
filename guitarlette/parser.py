@@ -30,7 +30,7 @@ class SongChord(SongToken):
 @dataclass
 class SongParser:
 
-    raw_data: str
+    content: str
     rows: List[List[Union[SongToken, SongChord]]] = field(
         default_factory=list, init=False
     )
@@ -38,7 +38,7 @@ class SongParser:
     def __post_init__(self):
         self.rows = [
             [self.parse_token(i) for i in row.split(" ")]
-            for row in [i for i in self.raw_data.strip().split("\n") if i]
+            for row in [i for i in self.content.strip().split("\n") if i]
         ]
 
     def parse_token(self, token: str) -> Union[SongToken, SongChord]:
@@ -49,7 +49,7 @@ class SongParser:
         return SongChord(content=token, chord=chord)
 
     def _apply(self, method: str, *args, **kwargs) -> None:
-        new_raw_data = []
+        new_content = []
 
         for row in self.rows:
             new_row = []
@@ -59,22 +59,22 @@ class SongParser:
 
                 new_row.append(token.content)
 
-            new_raw_data.append(" ".join(new_row))
+            new_content.append(" ".join(new_row))
 
-        self.raw_data = "\n".join(new_raw_data)
+        self.content = "\n".join(new_content)
 
     def transpose(self, n: int) -> None:
         self._apply("transpose", n)
 
     @property
     def html(self) -> str:
-        content = "".join(
+        html_content = "".join(
             [
                 f"<div class='row'>{' '.join([token.html for token in row])}</div>"
                 for row in self.rows
             ]
         )
-        return content
+        return html_content
 
 
 if __name__ == "__main__":
@@ -96,7 +96,7 @@ if __name__ == "__main__":
              C               D                 G Em C D
     let me hold it close and keep it here with me
     """
-    song = SongParser(raw_data=test)
+    song = SongParser(content=test)
     song.transpose(3)
     print(song.html)
     song.transpose(5)

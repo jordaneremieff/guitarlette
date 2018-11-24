@@ -35,7 +35,7 @@ class Composer(TemplateEndpoint):
         context = await super().get_context(request)
         if "song_id" in request.path_params:
             song = await Song.get(id=request.path_params["song_id"])
-            song_parser = SongParser(raw_data=song.content)
+            song_parser = SongParser(content=song.content)
             context["song_id"] = song.id
             context["song_name"] = song.name
             context["song_content"] = song.content
@@ -53,7 +53,7 @@ class GraphQLWebSocket(WebSocketEndpoint):
         message = json.loads(message)
         method = f"on_{message.pop('type').replace('.', '_')}"
         song_parser = await getattr(self, method)(message)
-        response = {"raw_data": song_parser.raw_data, "content": song_parser.html}
+        response = {"content": song_parser.content, "html": song_parser.html}
         await websocket.send_text(json.dumps(response))
 
     async def on_song_create(self, message) -> SongParser:
@@ -61,18 +61,18 @@ class GraphQLWebSocket(WebSocketEndpoint):
             query=CREATE_SONG_MUTATION, variables=message
         )
         content = res.data["createSong"]["song"]["content"]
-        return SongParser(raw_data=content)
+        return SongParser(content=content)
 
     async def on_song_update(self, message) -> SongParser:
         res = await self.scope["app"].graphql_app.execute(
             query=UPDATE_SONG_MUTATION, variables=message
         )
         content = res.data["updateSong"]["song"]["content"]
-        return SongParser(raw_data=content)
+        return SongParser(content=content)
 
     async def on_song_transpose(self, message) -> SongParser:
         content = message["content"]
         degree = int(message["degree"])
-        song_parser = SongParser(raw_data=content)
+        song_parser = SongParser(content=content)
         song_parser.transpose(degree)
         return song_parser

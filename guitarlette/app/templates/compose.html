@@ -60,10 +60,10 @@
     ws.onmessage = function(msg) {
         data = JSON.parse(msg.data);
         songViewer = document.getElementById("song-viewer")
-        songViewer.innerHTML = data.content
+        songViewer.innerHTML = data.html
 
         songContent = document.getElementById("song-content")
-        songContent.innerHTML = data.raw_data
+        songContent.innerHTML = data.content
         console.log(data);
     };
 
