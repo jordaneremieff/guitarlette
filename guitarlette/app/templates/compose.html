@@ -19,7 +19,7 @@
 
     <input id="transpose-degree" value="1"></input>
     <button onClick="transposeSong()">Transpose</button>
-    <button onClick="{% if song_id %}updateSong(){% else %}saveSong(){% endif %}">Save</button>
+    <button onClick="{% if song_id %}updateSong(){% else %}createSong(){% endif %}">Save</button>
 
     <button onClick="startScrolling()">Start</button>
     <button onClick="toggleScrolling()">Pause / Unpause</button>
@@ -32,7 +32,7 @@
 
     <script>
     const ws = new WebSocket("{{ WEBSOCKET_URL }}")
-    const songId = {% if song_id %}{{ song_id }}{% endif %}
+    const songId = {% if song_id %}{{ song_id }}{% else %}null{% endif %}
     const viewer = document.getElementById("viewer")
     const viewerContent = document.getElementById("viewer-content")
     const editorContent = document.getElementById("editor-content")
