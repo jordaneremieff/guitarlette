@@ -11,7 +11,7 @@ class SongToken:
     @property
     def html(self) -> str:
         if not self.content:
-            return "&nbsp;"
+            return "<span class='chord-delimiter'></span>"
         return self.content
 
 

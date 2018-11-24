@@ -4,6 +4,9 @@ body {
 .chord {
     font-weight: bold;
 }
+.chord-delimiter {
+    padding:3px;
+}
 .editor-input {
     margin-top: 10px;
     margin-bottom: 10px;
