@@ -17,13 +17,17 @@
         <textarea id="editor-content" rows="20" cols="100">{% if song_content %}{{ song_content }}{% endif %}</textarea>
     </div>
 
-    <input id="transpose-degree" value="1"></input>
-    <button onClick="transposeSong()">Transpose</button>
     <button onClick="{% if song_id %}updateSong(){% else %}createSong(){% endif %}">Save</button>
 
+    <input id="transpose-degree" value="1"></input>
+    <button onClick="transposeSong()">Transpose</button>
     <button onClick="startScrolling()">Start</button>
     <button onClick="toggleScrolling()">Pause / Unpause</button>
     <button onClick="stopScrolling()">Stop</button>
+
+    Font Size:
+    <button onClick="increaseFontSize()">+</button>
+    <button onClick="decreaseFontSize()">-</button>
 
     <div id="viewer">
         <div id="viewer-content">{% if song_id %}{{ song_parser.html|safe }}{% endif %}</div>
@@ -47,14 +51,14 @@
         editorContent.innerHTML = data.content
     };
 
-    function stopScrolling() {
-        clearInterval(scroller)
-    }
-
     function startScrolling() {
         var topPos = viewer.offsetTop
         stopScrolling()
         scroll(topPos)
+    }
+
+    function stopScrolling() {
+        clearInterval(scroller)
     }
 
     function toggleScrolling() {
@@ -68,6 +72,22 @@
                 viewer.scrollTop += 20
             }
         }, 500)
+    }
+
+    function getCurrentFontSize() {
+        return parseInt(window.getComputedStyle(viewerContent, null).getPropertyValue('font-size'))
+    }
+
+    function increaseFontSize() {
+        var fontSize = getCurrentFontSize()
+        fontSize++
+        viewerContent.style.fontSize = fontSize.toString()+"px";
+    }
+
+    function decreaseFontSize() {
+        var fontSize = getCurrentFontSize()
+        fontSize--
+        viewerContent.style.fontSize = fontSize.toString()+"px"
     }
 
     function transposeSong() {

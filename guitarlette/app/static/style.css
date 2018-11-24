@@ -1,5 +1,5 @@
 body {
-    font-family: monospace; 
+    font-family: monospace;
 }
 .chord {
     font-weight: bold;
@@ -15,6 +15,7 @@ body {
     margin-bottom: 10px;
 }
 #viewer {
+    font-size: 18px;
     overflow-y: scroll; 
     height: 1000px;
     margin-top: 10px;
