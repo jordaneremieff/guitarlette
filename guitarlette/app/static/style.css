@@ -1,0 +1,27 @@
+body {
+    font-family: monospace; 
+}
+.chord {
+    font-weight: bold;
+}
+.editor-input {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.editor-label {
+    margin-bottom: 10px;
+}
+#viewer {
+    overflow-y: scroll; 
+    height: 1000px;
+    margin-top: 10px;
+}
+label {
+    display: block;
+}
+textarea {
+    display: block;
+}
+button {
+    display: inline-block;
+}

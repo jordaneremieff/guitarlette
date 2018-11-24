@@ -2,34 +2,7 @@
 <html>
 <head>
     <title>guitarlette</title>
-    <style>
-    body {
-        font-family: monospace; 
-    }
-    .chord {
-        font-weight: bold;
-    }
-    .editor-input {
-        margin-top: 1em;
-        margin-bottom: 1em;
-    }
-    .editor-label {
-        margin-bottom: 0.5em;
-    }
-    .viewer {
-        margin-top: 1em;
-    }
-    label {
-        display: block;
-    }
-    textarea {
-        display: block;
-
-    }
-    button {
-        display: inline-block;
-    }
-    </style>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='style.css') }}">
 </head>
 <body>
 <h1>Composer</h1>
@@ -48,9 +21,12 @@
     <button onClick="transposeSong()">Transpose</button>
     <button onClick="{% if song_id %}updateSong(){% else %}saveSong(){% endif %}">Save</button>
 
-    <div class="viewer">
-        <div id="song-viewer">{% if song_id %}{{ song_parser.html|safe }}{% endif %}</div>
+    <button onClick="scrollViewer()">Scroll</button>
+
+    <div id="viewer">
+        <div id="viewer-content">{% if song_id %}{{ song_parser.html|safe }}{% endif %}</div>
     </div>
+    
 
     <script>
     const ws = new WebSocket("{{ WEBSOCKET_URL }}");
@@ -59,13 +35,23 @@
 
     ws.onmessage = function(msg) {
         data = JSON.parse(msg.data);
-        songViewer = document.getElementById("song-viewer")
+        songViewer = document.getElementById("viewer-content")
         songViewer.innerHTML = data.html
 
         songContent = document.getElementById("song-content")
         songContent.innerHTML = data.content
         console.log(data);
     };
+
+    function scrollViewer() {
+        var viewer = document.getElementById("viewer")
+        var viewerContent = document.getElementById("viewer-content")
+        var topPos = viewer.offsetTop
+        viewer.scrollTop = topPos - viewerContent.offsetTop
+        setInterval(function() { 
+            viewer.scrollTop += 20
+        }, 500)
+    }
 
     function transposeSong() {
         content = document.getElementById("song-content").value
