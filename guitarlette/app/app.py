@@ -49,30 +49,30 @@ class GraphQLWebSocket(WebSocketEndpoint):
 
     encoding = "text"
 
-    async def on_receive(self, websocket, message):
+    async def on_receive(self, websocket, message) -> None:
         message = json.loads(message)
-        message_type = message.pop("type")
-        if message_type == "song.transpose":
-            content = message["content"]
-            degree = int(message["degree"])
-            song_parser = SongParser(raw_data=content)
-            song_parser.transpose(degree)
-        else:
-            mutation_type = message_type.split(".")[1]
+        method = f"on_{message.pop('type').replace('.', '_')}"
+        song_parser = await getattr(self, method)(message)
+        response = {"raw_data": song_parser.raw_data, "content": song_parser.html}
+        await websocket.send_text(json.dumps(response))
 
-            if message_type == "song.create":
-                mutation = CREATE_SONG_MUTATION
-
-            elif message_type == "song.update":
-                mutation = UPDATE_SONG_MUTATION
-
-            res = await self.scope["app"].graphql_app.execute(
-                query=mutation, variables=message
-            )
-            content = res.data[f"{mutation_type}Song"]["song"]["content"]
-
-            song_parser = SongParser(raw_data=content)
-
-        await websocket.send_text(
-            json.dumps({"raw_data": song_parser.raw_data, "content": song_parser.html})
+    async def on_song_create(self, message) -> SongParser:
+        res = await self.scope["app"].graphql_app.execute(
+            query=CREATE_SONG_MUTATION, variables=message
         )
+        content = res.data["createSong"]["song"]["content"]
+        return SongParser(raw_data=content)
+
+    async def on_song_update(self, message) -> SongParser:
+        res = await self.scope["app"].graphql_app.execute(
+            query=UPDATE_SONG_MUTATION, variables=message
+        )
+        content = res.data["updateSong"]["song"]["content"]
+        return SongParser(raw_data=content)
+
+    async def on_song_transpose(self, message) -> SongParser:
+        content = message["content"]
+        degree = int(message["degree"])
+        song_parser = SongParser(raw_data=content)
+        song_parser.transpose(degree)
+        return song_parser
