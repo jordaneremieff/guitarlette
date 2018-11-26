@@ -8,7 +8,15 @@ Work in progress.
 
 This an attempt to write my ideal songwriting app for guitar as well as an experiment using a few different libraries that I find interesting. It relies heavily on [Starlette](https://github.com/encode/starlette), [Tortoise ORM](https://github.com/tortoise/tortoise-orm), [Graphene](https://github.com/graphql-python/graphene) and [pychord](https://github.com/yuma-m/pychord).
 
+
 ## Setup
+
+You can run the project with Docker:
+
+
+```docker-compose up -d```
+
+OR
 
 ```
 # Setup the dev environment and install the dependencies
