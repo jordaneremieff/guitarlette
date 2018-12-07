@@ -1,16 +1,45 @@
 import json
 
+from tortoise import Tortoise
+from graphql.execution.executors.asyncio import AsyncioExecutor
+
 from starlette.endpoints import WebSocketEndpoint
+from starlette.datastructures import DatabaseURL
+from starlette.applications import Starlette
+from starlette.staticfiles import StaticFiles
+from starlette.responses import HTMLResponse
+from starlette.graphql import GraphQLApp
+from starlette.config import Config
 
 from guitarlette.endpoints import TemplateEndpoint
-from guitarlette.models import Song
+from guitarlette.schema import schema
 from guitarlette.parser import SongParser
-from guitarlette.application import Guitarlette
-from guitarlette.app.settings import Config
+from guitarlette.models import Song
 from guitarlette.schema.queries import CREATE_SONG_MUTATION, UPDATE_SONG_MUTATION
 
 
-app = Guitarlette(config=Config())
+config = Config(".env")
+
+DEBUG = config("DEBUG", cast=bool, default=False)
+DATABASE_URL = config("DATABASE_URL", cast=DatabaseURL)
+WEBSOCKET_URL = config("WEBSOCKET_URL", cast=str)
+
+app = Starlette(debug=DEBUG, template_directory="templates/")
+app.mount("/static", StaticFiles(directory="static/"), name="static")
+graphql_app = GraphQLApp(schema=schema, executor=AsyncioExecutor())
+app.add_route("/graphql", graphql_app)
+
+
+@app.on_event("startup")
+async def on_startup() -> None:
+    """Create the database connection."""
+    await Tortoise.init(db_url=DATABASE_URL, modules={"models": ["guitarlette.models"]})
+
+
+@app.on_event("shutdown")
+async def on_shutdown() -> None:
+    """Cleanup the database connection."""
+    await Tortoise.close_connections()
 
 
 @app.route("/")
@@ -36,11 +65,8 @@ class Composer(TemplateEndpoint):
         if "song_id" in request.path_params:
             song = await Song.get(id=request.path_params["song_id"])
             song_parser = SongParser(content=song.content)
-            context["song_id"] = song.id
-            context["song_name"] = song.name
-            context["song_content"] = song.content
-            context["song_parser"] = song_parser
-        context["WEBSOCKET_URL"] = app.config.WEBSOCKET_URL
+            context = {"song": song, "song_parser": song_parser}
+        context["WEBSOCKET_URL"] = WEBSOCKET_URL
         return context
 
 
