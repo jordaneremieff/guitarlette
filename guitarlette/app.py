@@ -11,6 +11,7 @@ from starlette.responses import HTMLResponse
 from starlette.graphql import GraphQLApp
 from starlette.config import Config
 
+
 from guitarlette.endpoints import TemplateEndpoint
 from guitarlette.schema import schema
 from guitarlette.parser import SongParser
@@ -20,9 +21,11 @@ from guitarlette.schema.queries import CREATE_SONG_MUTATION, UPDATE_SONG_MUTATIO
 
 config = Config(".env")
 
+
 DEBUG = config("DEBUG", cast=bool, default=False)
-DATABASE_URL = config("DATABASE_URL", cast=DatabaseURL)
+DATABASE_URL = config("DATABASE_URL", cast=str)
 WEBSOCKET_URL = config("WEBSOCKET_URL", cast=str)
+
 
 app = Starlette(debug=DEBUG, template_directory="templates/")
 app.mount("/static", StaticFiles(directory="static/"), name="static")
@@ -78,20 +81,20 @@ class GraphQLWebSocket(WebSocketEndpoint):
     async def on_receive(self, websocket, message) -> None:
         message = json.loads(message)
         method = f"on_{message.pop('type').replace('.', '_')}"
-        song_parser = await getattr(self, method)(message)
+        song_parser = await getattr(self, method)(websocket, message)
         response = {"content": song_parser.content, "html": song_parser.html}
         await websocket.send_text(json.dumps(response))
 
-    async def on_song_create(self, message) -> SongParser:
-        res = await self.scope["app"].graphql_app.execute(
-            query=CREATE_SONG_MUTATION, variables=message
+    async def on_song_create(self, websocket, message) -> SongParser:
+        res = await graphql_app.execute(
+            websocket, query=CREATE_SONG_MUTATION, variables=message
         )
         content = res.data["createSong"]["song"]["content"]
         return SongParser(content=content)
 
-    async def on_song_update(self, message) -> SongParser:
-        res = await self.scope["app"].graphql_app.execute(
-            query=UPDATE_SONG_MUTATION, variables=message
+    async def on_song_update(self, websocket, message) -> SongParser:
+        res = await graphql_app.execute(
+            websocket, query=UPDATE_SONG_MUTATION, variables=message
         )
         content = res.data["updateSong"]["song"]["content"]
         return SongParser(content=content)

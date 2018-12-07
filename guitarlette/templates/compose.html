@@ -3,6 +3,8 @@
 <head>
     <title>guitarlette</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='style.css') }}">
+    <script src="{{ url_for('static', path='components.js') }}"></script>
+    
 </head>
 <body>
 <h1>Composer</h1>
@@ -115,6 +117,28 @@
             "content": editorContent.value
         }))
     }
+
+    function initEventListeners() {
+        var chordSpans = document.getElementsByClassName("chord")
+        for (var i = 0; i < chordSpans.length; i++) {
+            var chord = chordSpans[i]
+            chord.addEventListener('mouseover', function(e) {
+
+            console.log(e);
+            console.log("on");
+            })
+
+            chord.addEventListener('mouseout', function(e) {
+
+            console.log(e);
+            console.log("off");
+            })
+        }
+    }
+
+    initEventListeners()
+
+
     </script>
 </body>
 
