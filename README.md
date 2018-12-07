@@ -20,7 +20,7 @@ OR
 
 ```
 # Setup the dev environment and install the dependencies
-./scripts setup
+./scripts/setup
 
 # Activate the virtualenv
 . venv/bin/activate
