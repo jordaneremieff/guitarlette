@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass, field
-from typing import List, Union
+from typing import List, Union, Tuple
 
 
 from pychord import Chord
@@ -39,6 +39,7 @@ class SongParser:
     rows: List[List[Union[SongToken, SongChord]]] = field(
         default_factory=list, init=False
     )
+    chords: List[str] = field(default_factory=list, init=False)
 
     def __post_init__(self):
         self.rows = [
@@ -51,6 +52,9 @@ class SongParser:
             chord = Chord(token)
         except ValueError:
             return SongToken(content=token)
+        else:
+            if token not in self.chords:
+                self.chords.append(token)
         return SongChord(content=token, chord=chord)
 
     def _apply(self, method: str, *args, **kwargs) -> None:
@@ -88,6 +92,7 @@ class SongParser:
                 "type": "song.parser",
                 "editor_content": self.content,
                 "viewer_content": self.html,
+                "chords": self.chords,
             }
         )
 

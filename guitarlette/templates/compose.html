@@ -31,19 +31,25 @@
     <button onClick="increaseFontSize()">+</button>
     <button onClick="decreaseFontSize()">-</button>
 
+
+    <div id="chord-header">
+        {% if song_parser%}
+            {% for chord in song_parser.chords %}
+                <span class="chord" {{ chord }}> {{ chord }}</span>
+            {% endfor%}
+        {% endif %}
+    </div>
+
     <div id="viewer">
         <div id="viewer-content">{% if song_parser %}{{ song_parser.html|safe }}{% endif %}</div>
     </div>
 
-
     <script>
-
-
-
     const ws_url = "{{ WEBSOCKET_URL }}"
     const songId = {% if song %}{{ song.id }}{% else %}null{% endif %}
     const viewer = document.getElementById("viewer")
     const viewerContent = document.getElementById("viewer-content")
+    const chordHeader = document.getElementById("chord-header")
     const editorContent = document.getElementById("editor-content")
     const editorName = document.getElementById("editor-name")
     
@@ -129,16 +135,19 @@
         }))
     }
 
+
+    function getChordFingering(chord) {
+        
+    }
+
     function onChordHover(e) {
         var chord = e.srcElement.innerHTML
         console.log(chord)
         ws.send(JSON.stringify({
             "type": "chord.hover",
-            "content": "Test"
+            "chord": chord,
+            "variation": 1
         }))
-
-
-        // Display chord fingering here
     }
 
     function initEventListeners() {

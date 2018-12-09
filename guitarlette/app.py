@@ -108,5 +108,10 @@ class GraphQLWebSocket(WebSocketEndpoint):
         return song_parser.json
 
     async def on_chord_hover(self, websocket, message) -> str:
-        response = json.dumps({"type": "chord.hover", "img_src": "Test"})
+        # TODO: Maybe not do it this way?
+        chord = message["chord"]
+        variation = message["variation"]
+        # TODO: Generate all the static files
+        img_src = "http://127.0.0.1/static/{chord}/{variation}.png"
+        response = json.dumps({"type": "chord.hover", "img_src": img_src})
         return response
