@@ -3,16 +3,15 @@ import json
 from tortoise import Tortoise
 from graphql.execution.executors.asyncio import AsyncioExecutor
 
-from starlette.endpoints import WebSocketEndpoint
-from starlette.datastructures import DatabaseURL
+from starlette.endpoints import HTTPEndpoint, WebSocketEndpoint
+
+# from starlette.datastructures import DatabaseURL
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
 from starlette.responses import HTMLResponse
 from starlette.graphql import GraphQLApp
 from starlette.config import Config
 
-
-from guitarlette.endpoints import TemplateEndpoint
 from guitarlette.schema import schema
 from guitarlette.parser import SongParser
 from guitarlette.models import Song
@@ -45,32 +44,32 @@ async def on_shutdown() -> None:
     await Tortoise.close_connections()
 
 
+def render_response(request, template: str, context: dict) -> HTMLResponse:
+    req_ctx = {"request": request}
+    resp_ctx = {**req_ctx, **context}
+    content = app.get_template(template).render(**resp_ctx)
+    return HTMLResponse(content)
+
+
 @app.route("/")
-class Homepage(TemplateEndpoint):
-
-    template_name = "index.html"
-
-    async def get_context(self, request) -> dict:
-        context = await super().get_context(request)
+class Homepage(HTTPEndpoint):
+    async def get(self, request):
         songs = await Song.all()
-        context["songs"] = songs
-        return context
+        context = {"songs": songs}
+        return render_response(request, "index.html", context)
 
 
 @app.route("/compose")
 @app.route("/compose/{song_id:int}")
-class Composer(TemplateEndpoint):
-
-    template_name = "compose.html"
-
-    async def get_context(self, request) -> dict:
-        context = await super().get_context(request)
+class Composer(HTTPEndpoint):
+    async def get(self, request):
+        context = {"WEBSOCKET_URL": WEBSOCKET_URL}
         if "song_id" in request.path_params:
             song = await Song.get(id=request.path_params["song_id"])
             song_parser = SongParser(content=song.content)
-            context = {"song": song, "song_parser": song_parser}
-        context["WEBSOCKET_URL"] = WEBSOCKET_URL
-        return context
+            context["song"] = song
+            context["song_parser"] = song_parser
+        return render_response(request, "compose.html", context)
 
 
 @app.websocket_route("/ws")
