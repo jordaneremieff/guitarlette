@@ -1,6 +1,9 @@
-from pychord import Chord
+import json
 from dataclasses import dataclass, field
 from typing import List, Union
+
+
+from pychord import Chord
 
 
 @dataclass
@@ -70,13 +73,17 @@ class SongParser:
 
     @property
     def html(self) -> str:
-        html_content = "".join(
+        content = "".join(
             [
                 f"<div class='row'>{' '.join([token.html for token in row])}</div>"
                 for row in self.rows
             ]
         )
-        return html_content
+        return content
+
+    @property
+    def json(self):
+        return json.dumps({"editor_content": self.content, "viewer_content": self.html})
 
 
 if __name__ == "__main__":

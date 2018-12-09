@@ -81,8 +81,7 @@ class GraphQLWebSocket(WebSocketEndpoint):
         message = json.loads(message)
         method = f"on_{message.pop('type').replace('.', '_')}"
         song_parser = await getattr(self, method)(websocket, message)
-        response = {"content": song_parser.content, "html": song_parser.html}
-        await websocket.send_text(json.dumps(response))
+        await websocket.send_text(song_parser.json)
 
     async def on_song_create(self, websocket, message) -> SongParser:
         res = await graphql_app.execute(
@@ -98,7 +97,7 @@ class GraphQLWebSocket(WebSocketEndpoint):
         content = res.data["updateSong"]["song"]["content"]
         return SongParser(content=content)
 
-    async def on_song_transpose(self, message) -> SongParser:
+    async def on_song_transpose(self, websocket, message) -> SongParser:
         content = message["content"]
         degree = int(message["degree"])
         song_parser = SongParser(content=content)

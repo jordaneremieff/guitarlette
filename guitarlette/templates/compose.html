@@ -3,10 +3,6 @@
 <head>
     <title>guitarlette</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='style.css') }}">
-    <script src="{{ url_for('static', path='components.js') }}"></script>
-    <script src="https://unpkg.com/vue"></script>
-
-
 </head>
 <body>
 <h1>Composer</h1>
@@ -19,11 +15,6 @@
     <div class="editor-input">
         <label class="editor-label" for="song-content">Content</label>
         <textarea id="editor-content" rows="20" cols="100">{% if song_content %}{{ song_content }}{% endif %}</textarea>
-    </div>
-
-        
-    <div id="app">
-      <p>{{ message }}</p>
     </div>
 
     <button onClick="{% if song_id %}updateSong(){% else %}createSong(){% endif %}">Save</button>
@@ -43,7 +34,15 @@
     </div>
     
 
+    <div id="app">
+      <p>{{ message }}</p>
+    </div>
+
+
     <script>
+
+
+
     const ws = new WebSocket("{{ WEBSOCKET_URL }}")
     const songId = {% if song_id %}{{ song_id }}{% else %}null{% endif %}
     const viewer = document.getElementById("viewer")
@@ -54,10 +53,11 @@
     var scroller = null
     var scrollPaused = false
 
+
     ws.onmessage = function(msg) {
         data = JSON.parse(msg.data)
-        viewerContent.innerHTML = data.html
-        editorContent.innerHTML = data.content
+        viewerContent.innerHTML = data.viewer_content
+        editorContent.value = data.editor_content
     };
 
     function startScrolling() {
