@@ -83,7 +83,13 @@ class SongParser:
 
     @property
     def json(self):
-        return json.dumps({"editor_content": self.content, "viewer_content": self.html})
+        return json.dumps(
+            {
+                "type": "song.parser",
+                "editor_content": self.content,
+                "viewer_content": self.html,
+            }
+        )
 
 
 if __name__ == "__main__":

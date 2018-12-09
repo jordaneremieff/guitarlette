@@ -81,26 +81,32 @@ class GraphQLWebSocket(WebSocketEndpoint):
     async def on_receive(self, websocket, message) -> None:
         message = json.loads(message)
         method = f"on_{message.pop('type').replace('.', '_')}"
-        song_parser = await getattr(self, method)(websocket, message)
-        await websocket.send_text(song_parser.json)
+        response = await getattr(self, method)(websocket, message)
+        await websocket.send_text(response)
 
-    async def on_song_create(self, websocket, message) -> SongParser:
+    async def on_song_create(self, websocket, message) -> str:
         res = await graphql_app.execute(
             websocket, query=CREATE_SONG_MUTATION, variables=message
         )
         content = res.data["createSong"]["song"]["content"]
-        return SongParser(content=content)
+        song_parser = SongParser(content=content)
+        return song_parser.json
 
-    async def on_song_update(self, websocket, message) -> SongParser:
+    async def on_song_update(self, websocket, message) -> str:
         res = await graphql_app.execute(
             websocket, query=UPDATE_SONG_MUTATION, variables=message
         )
         content = res.data["updateSong"]["song"]["content"]
-        return SongParser(content=content)
+        song_parser = SongParser(content=content)
+        return song_parser.json
 
-    async def on_song_transpose(self, websocket, message) -> SongParser:
+    async def on_song_transpose(self, websocket, message) -> str:
         content = message["content"]
         degree = int(message["degree"])
         song_parser = SongParser(content=content)
         song_parser.transpose(degree)
-        return song_parser
+        return song_parser.json
+
+    async def on_chord_hover(self, websocket, message) -> str:
+        response = json.dumps({"type": "chord.hover", "img_src": "Test"})
+        return response

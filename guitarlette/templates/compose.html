@@ -54,8 +54,14 @@
 
     ws.onmessage = function(msg) {
         data = JSON.parse(msg.data)
-        viewerContent.innerHTML = data.viewer_content
-        editorContent.value = data.editor_content
+        if (data.type == "song.parser") {
+            viewerContent.innerHTML = data.viewer_content
+            editorContent.value = data.editor_content
+            initEventListeners()
+        }
+        if (data.type == "chord.hover") {
+            console.log(data)
+        }
     }
 
     function startScrolling() {
@@ -126,6 +132,12 @@
     function onChordHover(e) {
         var chord = e.srcElement.innerHTML
         console.log(chord)
+        ws.send(JSON.stringify({
+            "type": "chord.hover",
+            "content": "Test"
+        }))
+
+
         // Display chord fingering here
     }
 
