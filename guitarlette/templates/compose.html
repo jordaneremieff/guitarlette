@@ -89,13 +89,13 @@
 
     function increaseFontSize() {
         var fontSize = getCurrentFontSize()
-        fontSize++
+        fontSize += 10
         viewerContent.style.fontSize = fontSize.toString()+"px";
     }
 
     function decreaseFontSize() {
         var fontSize = getCurrentFontSize()
-        fontSize--
+        fontSize -= 10
         viewerContent.style.fontSize = fontSize.toString()+"px"
     }
 
