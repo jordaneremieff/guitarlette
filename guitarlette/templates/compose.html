@@ -123,21 +123,17 @@
         }))
     }
 
+    function onChordHover(e) {
+        var chord = e.srcElement.innerHTML
+        console.log(chord)
+        // Display chord fingering here
+    }
+
     function initEventListeners() {
         var chordSpans = document.getElementsByClassName("chord")
         for (var i = 0; i < chordSpans.length; i++) {
-            var chord = chordSpans[i]
-            chord.addEventListener('mouseover', function(e) {
-
-            console.log(e);
-            console.log("on");
-            })
-
-            chord.addEventListener('mouseout', function(e) {
-
-            console.log(e);
-            console.log("off");
-            })
+            var chordSpan = chordSpans[i]
+            chordSpan.addEventListener('mouseover', onChordHover)
         }
     }
 
