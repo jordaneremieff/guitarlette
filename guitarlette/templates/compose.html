@@ -9,15 +9,15 @@
     
     <div class="editor-input">
         <label class="editor-label" for="song-name">Name</label>
-        <input type="text" id="editor-name" {% if song_name %}value="{{ song_name }}" {% endif %}></input>
+        <input type="text" id="editor-name" {% if song %}value="{{ song.name }}"{% endif %}></input>
     </div>
 
     <div class="editor-input">
         <label class="editor-label" for="song-content">Content</label>
-        <textarea id="editor-content" rows="20" cols="100">{% if song_content %}{{ song_content }}{% endif %}</textarea>
+        <textarea id="editor-content" rows="20" cols="100">{% if song %}{{ song.content }}{% endif %}</textarea>
     </div>
 
-    <button onClick="{% if song_id %}updateSong(){% else %}createSong(){% endif %}">Save</button>
+    <button onClick="{% if song %}updateSong(){% else %}createSong(){% endif %}">Save</button>
 
     <input id="transpose-degree" value="1"></input>
     <button onClick="transposeSong()">Transpose</button>
@@ -30,7 +30,7 @@
     <button onClick="decreaseFontSize()">-</button>
 
     <div id="viewer">
-        <div id="viewer-content">{% if song_id %}{{ song_parser.html|safe }}{% endif %}</div>
+        <div id="viewer-content">{% if song_parser %}{{ song_parser.html|safe }}{% endif %}</div>
     </div>
     
 
@@ -44,7 +44,7 @@
 
 
     const ws = new WebSocket("{{ WEBSOCKET_URL }}")
-    const songId = {% if song_id %}{{ song_id }}{% else %}null{% endif %}
+    const songId = {% if song %}{{ song.id }}{% else %}null{% endif %}
     const viewer = document.getElementById("viewer")
     const viewerContent = document.getElementById("viewer-content")
     const editorContent = document.getElementById("editor-content")

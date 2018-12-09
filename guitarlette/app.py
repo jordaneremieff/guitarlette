@@ -65,7 +65,8 @@ class Composer(HTTPEndpoint):
     async def get(self, request):
         context = {"WEBSOCKET_URL": WEBSOCKET_URL}
         if "song_id" in request.path_params:
-            song = await Song.get(id=request.path_params["song_id"])
+            song_id = request.path_params["song_id"]
+            song = await Song.get(id=song_id)
             song_parser = SongParser(content=song.content)
             context["song"] = song
             context["song_parser"] = song_parser
