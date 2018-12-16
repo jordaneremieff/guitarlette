@@ -1,1 +1,1 @@
-from .schema import schema
+from .schema import schema  # noqa: F401

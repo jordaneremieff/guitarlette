@@ -8,7 +8,7 @@ from starlette.endpoints import HTTPEndpoint, WebSocketEndpoint
 # from starlette.datastructures import DatabaseURL
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, TemplateResponse
 from starlette.graphql import GraphQLApp
 from starlette.config import Config
 
@@ -44,42 +44,36 @@ async def on_shutdown() -> None:
     await Tortoise.close_connections()
 
 
-def render_response(request, template: str, context: dict) -> HTMLResponse:
-    req_ctx = {"request": request}
-    resp_ctx = {**req_ctx, **context}
-    content = app.get_template(template).render(**resp_ctx)
-    return HTMLResponse(content)
-
-
 @app.route("/")
 class Homepage(HTTPEndpoint):
     async def get(self, request):
         songs = await Song.all()
-        context = {"songs": songs}
-        return render_response(request, "index.html", context)
+        context = {"request": request, "songs": songs}
+        template = app.get_template("index.html")
+        return TemplateResponse(template, context)
 
 
 @app.route("/compose")
 @app.route("/compose/{song_id:int}")
 class Composer(HTTPEndpoint):
     async def get(self, request):
-        context = {"WEBSOCKET_URL": WEBSOCKET_URL}
+        context = {"request": request, "WEBSOCKET_URL": WEBSOCKET_URL}
         if "song_id" in request.path_params:
             song_id = request.path_params["song_id"]
             song = await Song.get(id=song_id)
             song_parser = SongParser(content=song.content)
             context["song"] = song
             context["song_parser"] = song_parser
-        return render_response(request, "compose.html", context)
+        template = app.get_template("compose.html")
+        return TemplateResponse(template, context)
 
 
 @app.websocket_route("/ws")
 class GraphQLWebSocket(WebSocketEndpoint):
 
-    encoding = "text"
+    encoding = "json"
 
     async def on_receive(self, websocket, message) -> None:
-        message = json.loads(message)
         method = f"on_{message.pop('type').replace('.', '_')}"
         response = await getattr(self, method)(websocket, message)
         await websocket.send_text(response)
