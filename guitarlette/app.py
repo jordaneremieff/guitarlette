@@ -79,17 +79,13 @@ class GraphQLWebSocket(WebSocketEndpoint):
         await websocket.send_text(response)
 
     async def on_song_create(self, websocket, message) -> str:
-        res = await graphql_app.execute(
-            websocket, query=CREATE_SONG_MUTATION, variables=message
-        )
+        res = await graphql_app.execute(query=CREATE_SONG_MUTATION, variables=message)
         content = res.data["createSong"]["song"]["content"]
         song_parser = SongParser(content=content)
         return song_parser.json
 
     async def on_song_update(self, websocket, message) -> str:
-        res = await graphql_app.execute(
-            websocket, query=UPDATE_SONG_MUTATION, variables=message
-        )
+        res = await graphql_app.execute(query=UPDATE_SONG_MUTATION, variables=message)
         content = res.data["updateSong"]["song"]["content"]
         song_parser = SongParser(content=content)
         return song_parser.json
