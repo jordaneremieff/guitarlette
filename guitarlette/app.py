@@ -1,75 +1,68 @@
 import json
 
 from tortoise import Tortoise
-from graphql.execution.executors.asyncio import AsyncioExecutor
+from tortoise.transactions import in_transaction
 
 from starlette.endpoints import HTTPEndpoint, WebSocketEndpoint
-
-# from starlette.datastructures import DatabaseURL
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
-from starlette.responses import HTMLResponse, TemplateResponse
-from starlette.graphql import GraphQLApp
+from starlette.responses import TemplateResponse
 from starlette.config import Config
 
-from guitarlette.schema import schema
 from guitarlette.parser import SongParser
-from guitarlette.models import Song
-from guitarlette.schema.queries import CREATE_SONG_MUTATION, UPDATE_SONG_MUTATION
-
+from guitarlette.models import Song, Revision  # , Notebook
 
 config = Config(".env")
-
 
 DEBUG = config("DEBUG", cast=bool, default=False)
 DATABASE_URL = config("DATABASE_URL", cast=str)
 WEBSOCKET_URL = config("WEBSOCKET_URL", cast=str)
+TEMPLATE_DIR = config("TEMPLATE_DIR", cast=str)
+STATIC_DIR = config("STATIC_DIR", cast=str)
 
-
-app = Starlette(debug=DEBUG, template_directory="templates/")
-app.mount("/static", StaticFiles(directory="static/"), name="static")
-graphql_app = GraphQLApp(schema=schema, executor=AsyncioExecutor())
-app.add_route("/graphql", graphql_app)
+app = Starlette(debug=DEBUG, template_directory=TEMPLATE_DIR)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 @app.on_event("startup")
 async def on_startup() -> None:
-    """Create the database connection."""
     await Tortoise.init(db_url=DATABASE_URL, modules={"models": ["guitarlette.models"]})
 
 
 @app.on_event("shutdown")
 async def on_shutdown() -> None:
-    """Cleanup the database connection."""
     await Tortoise.close_connections()
 
 
-@app.route("/")
-class Homepage(HTTPEndpoint):
-    async def get(self, request):
+@app.route("/", name="dashboard")
+class Dashboard(HTTPEndpoint):
+    async def get(self, request) -> TemplateResponse:
+        # songs = await Song.all()
+        context = {"request": request}
+        return TemplateResponse(app.get_template("dashboard.html"), context)
+
+
+@app.route("/songs", name="song-list")
+class SongList(HTTPEndpoint):
+    async def get(self, request) -> TemplateResponse:
         songs = await Song.all()
         context = {"request": request, "songs": songs}
-        template = app.get_template("index.html")
-        return TemplateResponse(template, context)
+        return TemplateResponse(app.get_template("list.html"), context)
 
 
-@app.route("/compose")
-@app.route("/compose/{song_id:int}")
-class Composer(HTTPEndpoint):
-    async def get(self, request):
+@app.route("/songs/compose", name="song-composer")
+@app.route("/songs/compose/{song_id:int}", name="song-detail")
+class SongComposer(HTTPEndpoint):
+    async def get(self, request) -> TemplateResponse:
         context = {"request": request, "WEBSOCKET_URL": WEBSOCKET_URL}
         if "song_id" in request.path_params:
-            song_id = request.path_params["song_id"]
-            song = await Song.get(id=song_id)
-            song_parser = SongParser(content=song.content)
+            song = await Song.get(id=request.path_params["song_id"])
             context["song"] = song
-            context["song_parser"] = song_parser
-        template = app.get_template("compose.html")
-        return TemplateResponse(template, context)
+        return TemplateResponse(app.get_template("composer.html"), context)
 
 
 @app.websocket_route("/ws")
-class GraphQLWebSocket(WebSocketEndpoint):
+class SongComposerWebSocket(WebSocketEndpoint):
 
     encoding = "json"
 
@@ -79,16 +72,36 @@ class GraphQLWebSocket(WebSocketEndpoint):
         await websocket.send_text(response)
 
     async def on_song_create(self, websocket, message) -> str:
-        res = await graphql_app.execute(query=CREATE_SONG_MUTATION, variables=message)
-        content = res.data["createSong"]["song"]["content"]
-        song_parser = SongParser(content=content)
-        return song_parser.json
+        title = message["title"]
+        content = message["content"]
+        song = await Song.create(title=title, content=content)
+        redirect_url = app.url_path_for("song-detail", song_id=song.id)
+        return json.dumps({"type": "song.redirect", "redirect_url": redirect_url})
 
     async def on_song_update(self, websocket, message) -> str:
-        res = await graphql_app.execute(query=UPDATE_SONG_MUTATION, variables=message)
-        content = res.data["updateSong"]["song"]["content"]
-        song_parser = SongParser(content=content)
-        return song_parser.json
+        song_id = int(message["id"])
+
+        async with in_transaction():
+            song = await Song.get(id=song_id)
+            await Revision.create(title=song.title, content=song.content, song=song)
+
+            if "title" in message:
+                song.title = message["title"]
+            if "content" in message:
+                song.content = message["content"]
+            # if "artist" in message:
+            #     song.artist = message["artist"]
+
+            await song.save()
+
+        return song.json
+
+    async def on_song_delete(self, websocket, message) -> str:
+        song_id = int(message["id"])
+        song = await Song.get(id=song_id)
+        await song.delete()
+        redirect_url = app.url_path_for("dashboard")
+        return json.dumps({"type": "song.redirect", "redirect_url": redirect_url})
 
     async def on_song_transpose(self, websocket, message) -> str:
         content = message["content"]
@@ -105,3 +118,23 @@ class GraphQLWebSocket(WebSocketEndpoint):
         img_src = "http://127.0.0.1/static/{chord}/{variation}.png"
         response = json.dumps({"type": "chord.hover", "img_src": img_src})
         return response
+
+
+# @app.route("/notebooks", name="notebook-list")
+# @app.route("/notebooks/create", name="notebook-create")
+# @app.route("/notebooks/update/{notebook_id:int}", name="notebook-retrieve")
+# @app.route("/notebooks/delete/{notebook_id:int}", name="notebook-delete")
+# class Notebooks(HTTPEndpoint):
+#     async def get(self, request) -> TemplateResponse:
+#         notebooks = await Notebook.all().prefetch_related("songs")
+#         context = {"request": request, "notebooks": notebooks}
+#         return TemplateResponse(app.get_template("notebooks.html"), context)
+
+#     async def create(self, request) -> TemplateResponse:
+#         pass
+
+#     async def update(self, request) -> TemplateResponse:
+#         pass
+
+#     async def delete(self, request) -> TemplateResponse:
+#         pass

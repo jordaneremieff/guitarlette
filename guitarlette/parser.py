@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass, field
-from typing import List, Union, Tuple
+from typing import List, Union
 
 
 from pychord import Chord
@@ -62,12 +62,12 @@ class SongParser:
 
         for row in self.rows:
             new_row = []
+
             for token in row:
                 if hasattr(token, "chord"):
                     getattr(token, method)(*args, **kwargs)
 
                 new_row.append(token.content)
-
             new_content.append(" ".join(new_row))
 
         self.content = "\n".join(new_content)

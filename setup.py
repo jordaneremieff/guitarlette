@@ -20,7 +20,6 @@ setup(
         "starlette",
         "aiofiles",
         "jinja2",
-        "graphene",
         "tortoise-orm",
         "pychord",
     ],

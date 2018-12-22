@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{% block page_title %}guitarlette{% endblock page_title %}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css" integrity="sha256-2pUeJf+y0ltRPSbKOeJh09ipQFYxUdct5nTY6GAXswA=" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/style.css') }}">
+
+	<link rel="icon" type="image/png" href="{{ url_for('static', path='images/favicon.png') }}">
+	{% block extra_head %}
+	{% endblock extra_head %}
+</head>
+<body>
+	<nav class="navbar" role="navigation" aria-label="main navigation">
+		<div class="navbar-brand">
+			<a style="background: black; color: white; font-weight: bold;" class="navbar-item" href="{{ url_for('dashboard') }}">
+				guitarlette
+			</a>
+
+			<a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+				<span aria-hidden="true"></span>
+				<span aria-hidden="true"></span>
+				<span aria-hidden="true"></span>
+			</a>
+		</div>
+
+		<div id="navbarBasicExample" class="navbar-menu">
+			<div class="navbar-start">
+				<a href="{{ url_for('song-composer') }}" class="navbar-item">
+					compose
+				</a>
+				
+				<a href="{{ url_for('song-list') }}" class="navbar-item">
+					your songs
+				</a>
+
+				<div class="navbar-item has-dropdown is-hoverable">
+					<a class="navbar-link">
+						more
+					</a>
+
+					<div class="navbar-dropdown">
+						<a class="navbar-item">
+							about
+						</a>
+						<a class="navbar-item">
+							contact
+						</a>
+						<hr class="navbar-divider">
+						<a class="navbar-item">
+							report an issue
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<div class="navbar-end">
+				<div class="navbar-item">
+					<div class="buttons">
+						<a class="button is-primary">
+							<strong>sign up</strong>
+						</a>
+						<a class="button is-light">
+							log in
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</nav>
+
+	{% block content %}
+	{% endblock content %}
+	
+</body>
+</html>
+
+
+
+
+
+

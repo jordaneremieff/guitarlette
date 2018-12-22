@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+	<h1>Songs</h1>
+    {% if songs %}
+    	{% for song in songs %}
+    		<a href="{{ url_for('song-detail', song_id=song.id) }}">{{ song }}</a>
+    	{% endfor %}
+    {% else %}
+    	No songs.
+    {% endif %}
+{% endblock content %}
