@@ -5,61 +5,32 @@
 {% endblock extra_head %}
 
 {% block content %}
-
 <h1>composer</h1>
-
-
-
 {% if song %}
-    <strong>Created</strong>: {{ song.created_at.strftime('%Y-%m-%d-%HH-%MM-%SS') }} <strong>Updated</strong>: {{ song.updated_at.strftime('%Y-%m-%d-%H-%M-%S') }}<br>
+    <strong>created</strong>: {{ song.created_at.strftime('%Y-%m-%d-%HH-%MM-%SS') }} <strong>updated</strong>: {{ song.updated_at.strftime('%Y-%m-%d-%H-%M-%S') }}<br>
 {% endif %}
 
 
-<div class="container is-fluid">
-    <div class="notification">
-        <div class="field">
-            <label class="label">title</label>
-            <div class="control">
-                <input class="input" type="text" id="editor-title" value="{{ song.name if song else 'untitled' }}">
-            </div>
-        </div>
-        <div class="field">
-            <label class="label">content</label>
-            <div class="control">
-                <textarea class="textarea" id="editor-content">{{ song.content if song else ''}}</textarea>
-            </div>
-        </div>
-        <div class="field is-grouped">
-            <div class="control">
-                <button class="button is-link" onClick="updateSong()">save</button>>
-            </div>
-            <div class="control">
-                <button class="button is-text">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
+title: <input class="editor-input" type="text" id="editor-title" value="{{ song.title if song else 'untitled' }}">
+artist: <input class="editor-input" type="text" id="editor-artist" value="{{ song.artist if song else 'nobody' }}">
+<br>
+content: <textarea rows="50" cols="100" class="editor-textarea" id="editor-content">{{ song.content if song else ''}}</textarea>
 
 
-{% if song %}
-<button 
-<button onclick="deleteSong()">delete</button>
-{% else %}
-<button onClick="createSong()">save</button>
-{% endif %}
+<button onClick="saveSong()">save</button>{% if song %} | <button onclick="deleteSong()">delete</button>{% endif %}
 
 <br>
 <input id="transpose-degree" value="1"></input>
-<button onClick="transposeSong()">Transpose</button>
+<button onClick="transposeSong()">transpose</button>
 <br>
-Scrolling:
+scrolling:
 <br>
-<button onClick="startScrolling()">Start</button>
-<button onClick="toggleScrolling()">Pause / Unpause</button>
-<button onClick="stopScrolling()">Stop</button>
+<button onClick="startScrolling()">start</button>
+<button onClick="toggleScrolling()">pause / unpause</button>
+<button onClick="stopScrolling()">stop</button>
 <br>
 
-Font Size:
+font size:
 <br>
 <button onClick="updateFontSize('+')">+</button>
 <button onClick="updateFontSize('-')">-</button>
@@ -67,9 +38,9 @@ Font Size:
 
 <div id="chord-header">
     {% if song %}
-    {% for chord in song.chords %}
-    <span class="chord" {{ chord }}> {{ chord }}</span>
-    {% endfor %}
+        {% for chord in song.chords %}
+            <span class="chord" {{ chord }}> {{ chord }}</span>
+        {% endfor %}
     {% endif %}
 </div>
 
@@ -85,7 +56,7 @@ Font Size:
     const chordHeader = document.getElementById("chord-header")
     const editorContent = document.getElementById("editor-content")
     const editorTitle = document.getElementById("editor-title")
-    // const editorArtist = document.getElementById("editor-artist")
+    const editorArtist = document.getElementById("editor-artist")
     
     var ws = new ReconnectingWebSocket(ws_url);
     var scroller = null
@@ -143,22 +114,14 @@ Font Size:
         viewerContent.style.fontSize = fontSize.toString()+"px"
     }
 
-    function createSong() {
+    function saveSong() {
+        var type = songId === null ? "song.create" : "song.update"
         ws.send(JSON.stringify({
-            "type": "song.create",
-            "title": editorTitle.value,
-            "content": editorContent.value,
-            // "artist": editorArtist.value
-        }))
-    }
-
-    function updateSong() {
-        ws.send(JSON.stringify({
-            "type": "song.update",
+            "type": type,
             "id": songId,
             "title": editorTitle.value,
             "content": editorContent.value,
-            // "artist": editorArtist.value
+            "artist": editorArtist.value
         }))
     }
 

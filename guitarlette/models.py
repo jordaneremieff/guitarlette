@@ -1,12 +1,7 @@
 from tortoise.models import Model
 from tortoise import fields
 
-from guitarlette.parser import SongParser
-
-
-class Artist(Model):
-    id = fields.IntField(pk=True)
-    name = fields.TextField()
+from guitarlette.parser import Parser
 
 
 class Revision(Model):
@@ -16,7 +11,6 @@ class Revision(Model):
 
     id = fields.IntField(pk=True)
     song = fields.ForeignKeyField("models.Song", related_name="revisions")
-    # artist = fields.ForeignKeyField("models.Artist")
     title = fields.TextField()
     content = fields.TextField()
     created_at = fields.DatetimeField(auto_now_add=True)
@@ -37,10 +31,7 @@ class Song(Model):
     PUBLISHED = 1
 
     id = fields.IntField(pk=True)
-    notebook = fields.ForeignKeyField(
-        "models.Notebook", null=True, related_name="songs", on_delete=fields.SET_NULL
-    )
-    # artist = fields.ForeignKeyField("models.Artist")
+    artist = fields.TextField(default="nobody")
     title = fields.TextField()
     content = fields.TextField()
     status = fields.IntField(default=DRAFT)
@@ -51,8 +42,8 @@ class Song(Model):
         return self.title
 
     @property
-    def parser(self) -> SongParser:
-        return SongParser(self.content)
+    def parser(self) -> Parser:
+        return Parser(self.content)
 
     @property
     def chords(self):
@@ -61,21 +52,3 @@ class Song(Model):
     @property
     def html(self) -> str:
         return self.parser.html
-
-    @property
-    def json(self) -> str:
-        return self.parser.json
-
-
-class Notebook(Model):
-    """
-    A collection of songs.
-    """
-
-    id = fields.IntField(pk=True)
-    title = fields.TextField()
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
-
-    def __str__(self) -> str:
-        return self.title

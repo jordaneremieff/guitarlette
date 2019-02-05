@@ -7,38 +7,39 @@ from pychord import Chord
 
 
 @dataclass
-class SongToken:
+class Token:
+    """
+    A token contained within a composition.
+
+    This may represent the following:
+
+        * a chord value, such as 'C'
+        * an empty space to be used as a delimiter
+        * any string value, such as the lyrics in a song
+    """
 
     content: str
+    chord: Chord = None
 
     @property
     def html(self) -> str:
-        if not self.content:
+        if self.chord is not None:
+            return f"<span class='chord {self.chord}'>{self.content}</span>"
+        elif not self.content:
             return "<span class='chord-delimiter'></span>"
         return self.content
 
-
-@dataclass
-class SongChord(SongToken):
-
-    chord: Chord
-
-    @property
-    def html(self) -> str:
-        return f"<span class='chord {self.chord}'>{self.content}</span>"
-
     def transpose(self, n: int) -> None:
+        assert self.chord is not None
         self.chord.transpose(n)
         self.content = str(self.chord)
 
 
 @dataclass
-class SongParser:
+class Parser:
 
     content: str
-    rows: List[List[Union[SongToken, SongChord]]] = field(
-        default_factory=list, init=False
-    )
+    rows: List[List[Token]] = field(default_factory=list, init=False)
     chords: List[str] = field(default_factory=list, init=False)
 
     def __post_init__(self):
@@ -47,33 +48,46 @@ class SongParser:
             for row in [i for i in self.content.strip().split("\n") if i]
         ]
 
-    def parse_token(self, token: str) -> Union[SongToken, SongChord]:
+    def parse_token(self, token: str) -> Token:
         try:
             chord = Chord(token)
         except ValueError:
-            return SongToken(content=token)
+            return Token(content=token)
         else:
             if token not in self.chords:
                 self.chords.append(token)
-        return SongChord(content=token, chord=chord)
+        return Token(content=token, chord=chord)
 
-    def _apply(self, method: str, *args, **kwargs) -> None:
-        new_content = []
+    def transform(self, method: str, *args, **kwargs) -> None:
+        """
+        Apply a transformation method to the song content.
+        """
+        new_content_rows = []
 
         for row in self.rows:
+
             new_row = []
 
             for token in row:
-                if hasattr(token, "chord"):
+
+                # Iterate the `Token`s, checking if there is a chord value. If found,
+                # the transform method on the `Token` instance will be called with the
+                # supplied arguments.
+                if token.chord is not None:
                     getattr(token, method)(*args, **kwargs)
 
+                # Append the token content to the row to build a new composition.
                 new_row.append(token.content)
-            new_content.append(" ".join(new_row))
 
-        self.content = "\n".join(new_content)
+            # Join the new token row together to form a complete content row, then
+            # append to the new content rows to finally be joined to form the new
+            # content.
+            new_content_rows.append(" ".join(new_row))
+
+        self.content = "\n".join(new_content_rows)
 
     def transpose(self, n: int) -> None:
-        self._apply("transpose", n)
+        self.transform("transpose", n)
 
     @property
     def html(self) -> str:
@@ -86,15 +100,13 @@ class SongParser:
         return content
 
     @property
-    def json(self):
-        return json.dumps(
-            {
-                "type": "song.parser",
-                "editor_content": self.content,
-                "viewer_content": self.html,
-                "chords": self.chords,
-            }
-        )
+    def dict(self):
+        return {
+            "type": "song.parser",
+            "editor_content": self.content,
+            "viewer_content": self.html,
+            "chords": self.chords,
+        }
 
 
 if __name__ == "__main__":
@@ -116,8 +128,8 @@ if __name__ == "__main__":
              C               D                 G Em C D
     let me hold it close and keep it here with me
     """
-    song = SongParser(content=test)
+    song = Parser(content=test)
     song.transpose(3)
-    print(song.html)
-    song.transpose(5)
-    print(song.html)
+    print(song.content)
+    # song.transpose(5)
+    # print(song.html)

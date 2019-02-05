@@ -8,25 +8,24 @@ body {
     padding: 3px;
 }
 
-.editor-input {
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-.editor-label {
-    margin-bottom: 10px;
-}
 #viewer {
     font-size: 18px;
     overflow-y: scroll; 
     height: 1000px;
     margin-top: 10px;
 }
-label {
+.editor-textarea {
     display: block;
 }
-textarea {
+.editor-input {
+    margin-top: 10px;
+    margin-bottom: 10px;
     display: block;
 }
+.editor-label {
+    margin-bottom: 10px;
+}
+
 button {
     display: inline-block;
 }
