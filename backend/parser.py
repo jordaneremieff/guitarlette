@@ -1,6 +1,5 @@
-import json
 from dataclasses import dataclass, field
-from typing import List, Union
+from typing import List
 
 
 from pychord import Chord
@@ -107,29 +106,3 @@ class Parser:
             "viewer_content": self.html,
             "chords": self.chords,
         }
-
-
-if __name__ == "__main__":
-    test = """
-    G                Em
-    What a beautiful face
-                         C
-    I have found in this place,
-                     D
-    that is circling all around the sun
-    G                Em
-    What a beautiful dream
-                            C
-    that could flash on the screen
-                     D                    G
-    in a blink of an eye and be gone from me,
-              Em
-    soft and sweet,
-             C               D                 G Em C D
-    let me hold it close and keep it here with me
-    """
-    song = Parser(content=test)
-    song.transpose(3)
-    print(song.content)
-    # song.transpose(5)
-    # print(song.html)
