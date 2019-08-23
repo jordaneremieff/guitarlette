@@ -1,7 +1,0 @@
-starlette
-uvicorn
-tortoise-orm
-aiosqlite
-graphene
-aiofiles
-pychord
