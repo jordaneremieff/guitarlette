@@ -1,6 +1,6 @@
 <script>
     import { onMount } from "svelte";
-    let data = {"title": "", "content": ""};
+    let data = {"title": "untitled", "artist": "nobody", "content": ""};
     export let id = null;
     if (id !== null) {
         onMount(async function() {
@@ -19,6 +19,7 @@
             url = `http://localhost:8000/songs`;
         }
         formData.append("title", form.title.value);
+        formData.append("artist", form.artist.value);
         formData.append("content", form.content.value);
         const response = await fetch(url, {
             method: "post",
@@ -49,6 +50,8 @@
 <h1>Composer</h1>
 <form id="songForm">
     title: <input type="text" id="title" value="{data.title}">
+    <br>
+    artist: <input type="text" id="artist" value="{data.artist}">
     <br>
     content: <textarea rows="50" cols="100" id="content" value="{data.content}"></textarea>
 </form>
