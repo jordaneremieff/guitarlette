@@ -23,6 +23,8 @@ class Composer(HTTPEndpoint):
             SELECT * FROM songs WHERE id = :id
             """
             result = await database.fetch_one(query=query, values={"id": song_id})
+            if not result:
+                return JSONResponse({"detail": "Not found"}, status_code=404)
             return JSONResponse(dict(result))
         else:
             query = "SELECT * FROM songs"
