@@ -1,5 +1,4 @@
 <script>
-    import { Button, Col, Row } from 'sveltestrap';
     import { onMount } from "svelte";
 
     let data = {"title": "untitled", "artist": "nobody", "content": ""};
@@ -37,9 +36,18 @@
     }
 
     async function transposeSong() {
-        // degree = document.getElementById("degree").value;
-        // const form = document.getElementById('editor-form');
-        // let content = form.content.value;
+        const degree = document.getElementById("degree").value;
+        const form = document.getElementById('editor-form');
+        const formData = new FormData();
+        formData.append("content", form.content.value);
+        formData.append("degree", degree);
+        const response = await fetch("http://localhost:8000/transpose", {
+            method: "post",
+            body: formData,
+        })
+        const json = await response.json();
+        let viewerContent= document.getElementById("viewer-content");
+        viewerContent.innerHTML = json.parsed_content;
     }
 
     function startScrolling() {
@@ -129,7 +137,7 @@ button {
     <div id="viewer-content">{@html data.parsed_content}</div>
 </div>
 
-<Button color="primary" on:click={saveSong}>Save</Button>
+<button on:click={saveSong}>Save</button>
 <button on:click={transposeSong}>Transpose</button><input type="number" id="degree" value="1" />
 <button on:click="{startScrolling}">start</button>
 <button on:click="{toggleScrolling}">pause / unpause</button>

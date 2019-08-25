@@ -16,7 +16,7 @@ app.debug = True
 
 @app.route("/songs")
 @app.route("/songs/{id:int}")
-class Composer(HTTPEndpoint):
+class SongEndpoint(HTTPEndpoint):
     async def get(self, request) -> JSONResponse:
         song_id = request.path_params.get("id")
         if song_id:
@@ -62,6 +62,19 @@ class Composer(HTTPEndpoint):
 
         song["parsed_content"] = Parser(song["content"]).html
         return JSONResponse(song)
+
+
+@app.route("/transpose")
+class ComposerEndpoint(HTTPEndpoint):
+    async def post(self, request) -> JSONResponse:
+        form = await request.form()
+        data = dict(form)
+        content = data["content"]
+        degree = int(data["degree"])
+        parsed_content = Parser(content)
+        parsed_content.transpose(degree)
+        response = {"parsed_content": parsed_content.html}
+        return JSONResponse(response)
 
 
 @app.on_event("startup")
