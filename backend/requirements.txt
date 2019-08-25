@@ -3,3 +3,4 @@ python-multipart
 databases[sqlite]
 typesystem
 alembic
+pychord

@@ -23,7 +23,7 @@ class Token:
     @property
     def html(self) -> str:
         if self.chord is not None:
-            return f"<span class='chord {self.chord}'>{self.content}</span>"
+            return f"<span class='chord'>{self.content}</span>"
         elif not self.content:
             return "<span class='chord-delimiter'></span>"
         return self.content
@@ -97,12 +97,3 @@ class Parser:
             ]
         )
         return content
-
-    @property
-    def dict(self):
-        return {
-            "type": "song.parser",
-            "editor_content": self.content,
-            "viewer_content": self.html,
-            "chords": self.chords,
-        }

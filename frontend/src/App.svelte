@@ -5,6 +5,7 @@
     import Composer from "./components/Composer.svelte";
     let url = "";
 </script>
+
 <Router url="{url}">
   <nav>
     <NavLink to="/">Home</NavLink>
