@@ -46,7 +46,8 @@ class SongEndpoint(HTTPEndpoint):
 
     async def delete(self, request) -> JSONResponse:
         song_id = request.path_params.get("id")
-        await Song.objects.delete(id=song_id)
+        song = await Song.objects.get(id=song_id)
+        await song.delete()
         return JSONResponse({"detail": "Successfully deleted"})
 
 
