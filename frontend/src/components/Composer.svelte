@@ -1,4 +1,5 @@
 <script>
+    
     import { onMount } from "svelte";
 
     let data = {"title": "untitled", "artist": "nobody", "content": ""};
@@ -31,23 +32,26 @@
             body: formData,
         })
         const json = await response.json();
-        let viewerContent= document.getElementById("viewer-content");
-        viewerContent.innerHTML = json.parsed_content;
+        let viewerContent = document.getElementById("viewer-content");
+        viewerContent.innerHTML = json.viewer_content;
     }
 
     async function transposeSong() {
         const degree = document.getElementById("degree").value;
         const form = document.getElementById('editor-form');
         const formData = new FormData();
-        formData.append("content", form.content.value);
+        formData.append("content", data.content);
         formData.append("degree", degree);
         const response = await fetch("http://localhost:8000/transpose", {
             method: "post",
             body: formData,
         })
         const json = await response.json();
-        let viewerContent= document.getElementById("viewer-content");
-        viewerContent.innerHTML = json.parsed_content;
+        let editorContent = document.getElementById("editor-content");
+        let viewerContent = document.getElementById("viewer-content");
+        data.content = json.content;
+        viewerContent.innerHTML = json.viewer_content;
+
     }
 
     function startScrolling() {
@@ -69,7 +73,7 @@
         viewer.scrollTop = topPos - viewerContent.offsetTop
         scroller = setInterval(function() { 
             if(!scrollPaused) {
-                viewer.scrollTop += 4
+                viewer.scrollTop += 20
             }
         }, 500)
     }
@@ -87,8 +91,10 @@
 
 <style>
 
-body {
+:global(body) {
     font-family: monospace;
+    background-color:#F5F5F5;
+    color: #212121;
 }
 
 :global(.chord) {
@@ -99,22 +105,63 @@ body {
     padding: 3px;
 }
 
+:global(.row) {
+    margin-top: 10px;
+}
+
+#container {
+    width: 100%;
+    background-color: #FAFAFA;
+    color: #000000;
+}
+#editor {
+    width: 40%;
+    float: left;
+    height: 800px;
+}
+
+#editor-form {
+    display: inline-block;
+    margin: 5px;
+}
+textarea {
+    background-color: #FFFFFF;
+    width: 99%;
+    margin-right: 1%;
+    height: 670px;
+    -webkit-box-sizing: border-box; 
+    -moz-box-sizing: border-box; 
+    box-sizing: border-box;
+    color: #212121; 
+}
+
 #viewer {
+    width: 60%;
     font-size: 18px;
     overflow-y: scroll; 
-    height: 1000px;
-    margin-top: 10px;
-}
-#editor-form.textarea {
-    display: block;
-}
-#editor-form.input {
-    margin-top: 10px;
+    height: 800px;
     margin-bottom: 10px;
-    display: block;
 }
-#editor-form.label {
-    margin-bottom: 10px;
+
+#viewer-content {
+    background-color: #FFFFFF;
+    color: #212121;
+    font-size: 10px;
+    padding: 10px;
+}
+
+#viewer-controls {
+    background: #FAFAFA;
+    padding: 5px;
+    color: #FFFFFF;
+    font-size: 10px;
+    position: sticky;
+    top: 0;
+}
+
+
+#clear {
+    clear: both;
 }
 
 button {
@@ -122,25 +169,33 @@ button {
 }
 </style>
 
+
+
 <h1>Composer</h1>
-<div id="editor">
-<form id="editor-form">
-    title: <input type="text" id="title" value="{data.title}">
-    <br>
-    artist: <input type="text" id="artist" value="{data.artist}">
-    <br>
-    content: <textarea rows="50" cols="100" id="content" value="{data.content}"></textarea>
-</form>
+<div id="container">
+    <div id="editor">
+        <form id="editor-form">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" value="{data.title}">
+            <label for="artist">Artist</label>
+            <input type="text" id="artist" name="artist" value="{data.artist}">
+            <label for="content">Content</label>
+            <textarea rows="50" cols="100" id="content" name="content" bind:value="{data.content}"></textarea>
+        </form>
+    </div>
+    <div id="viewer">
+        <div id="viewer-controls">
+            <button on:click={saveSong}>Save</button>
+            <button on:click={transposeSong}>Transpose</button><input type="number" id="degree" value="1" />
+            <button on:click="{startScrolling}">start</button>
+            <button on:click="{toggleScrolling}">pause / unpause</button>
+            <button on:click="{stopScrolling}">stop</button>
+            <button on:click={()=>updateFontSize('+')}>+</button>
+            <button on:click={()=>updateFontSize('-')}>-</button>
+        </div>
+        <div id="viewer-content">
+            {@html data.viewer_content}
+        </div>
+    </div>
+    <div id="clear"></div>
 </div>
-
-<div id="viewer">
-    <div id="viewer-content">{@html data.parsed_content}</div>
-</div>
-
-<button on:click={saveSong}>Save</button>
-<button on:click={transposeSong}>Transpose</button><input type="number" id="degree" value="1" />
-<button on:click="{startScrolling}">start</button>
-<button on:click="{toggleScrolling}">pause / unpause</button>
-<button on:click="{stopScrolling}">stop</button>
-<button on:click={()=>updateFontSize('+')}>+</button>
-<button on:click={()=>updateFontSize('-')}>-</button>

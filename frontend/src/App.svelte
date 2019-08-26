@@ -6,6 +6,8 @@
     let url = "";
 </script>
 
+
+
 <Router url="{url}">
   <nav>
     <NavLink to="/">Home</NavLink>

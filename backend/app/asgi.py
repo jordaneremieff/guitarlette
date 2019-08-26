@@ -27,7 +27,7 @@ class SongEndpoint(HTTPEndpoint):
             if not result:
                 return JSONResponse({"detail": "Not found"}, status_code=404)
             song = dict(result)
-            song["parsed_content"] = Parser(song["content"]).html
+            song["viewer_content"] = Parser(song["content"]).html
             return JSONResponse(song)
         else:
             query = "SELECT * FROM songs"
@@ -60,7 +60,7 @@ class SongEndpoint(HTTPEndpoint):
             """
         await database.execute(query=query, values=song)
 
-        song["parsed_content"] = Parser(song["content"]).html
+        song["viewer_content"] = Parser(song["content"]).html
         return JSONResponse(song)
 
 
@@ -71,9 +71,9 @@ class ComposerEndpoint(HTTPEndpoint):
         data = dict(form)
         content = data["content"]
         degree = int(data["degree"])
-        parsed_content = Parser(content)
-        parsed_content.transpose(degree)
-        response = {"parsed_content": parsed_content.html}
+        parsed = Parser(content)
+        parsed.transpose(degree)
+        response = {"content": parsed.content, "viewer_content": parsed.html}
         return JSONResponse(response)
 
 
