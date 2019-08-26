@@ -43,8 +43,8 @@ class SongEndpoint(HTTPEndpoint):
         if errors:
             return JSONResponse(dict(errors), status_code=400)
 
-        song = dict(song)
         song_id = request.path_params.get("id")
+        song = dict(song)
 
         if song_id:
             query = """
@@ -52,15 +52,20 @@ class SongEndpoint(HTTPEndpoint):
             SET title = :title, artist = :artist, content = :content
             WHERE id = :id
             """
-            song["id"] = song_id
         else:
             query = """
             INSERT INTO songs(title, artist, content)
             VALUES (:title, :artist, :content)
             """
-        await database.execute(query=query, values=song)
+
+        result = await database.execute(query=query, values=song)
+
+        if not song_id:
+            song["id"] = result
+            song["redirect"] = True
 
         song["viewer_content"] = Parser(song["content"]).html
+
         return JSONResponse(song)
 
 

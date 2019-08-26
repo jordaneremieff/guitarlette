@@ -2,6 +2,7 @@
     
     import { onMount } from "svelte";
 
+
     let data = {"title": "untitled", "artist": "nobody", "content": ""};
     let scroller = null;
     let scrollPaused = false;
@@ -32,8 +33,13 @@
             body: formData,
         })
         const json = await response.json();
-        let viewerContent = document.getElementById("viewer-content");
-        viewerContent.innerHTML = json.viewer_content;
+        if (json.redirect === true) {
+            let id = json.id;
+            window.location.replace(`http://localhost:5000/composer/${id}`);
+        } else {
+            let viewerContent = document.getElementById("viewer-content");
+            viewerContent.innerHTML = json.viewer_content;
+        }
     }
 
     async function transposeSong() {
@@ -182,10 +188,11 @@ button {
             <label for="content">Content</label>
             <textarea rows="50" cols="100" id="content" name="content" bind:value="{data.content}"></textarea>
         </form>
+        <button on:click={saveSong}>Save</button>
     </div>
     <div id="viewer">
         <div id="viewer-controls">
-            <button on:click={saveSong}>Save</button>
+            
             <button on:click={transposeSong}>Transpose</button><input type="number" id="degree" value="1" />
             <button on:click="{startScrolling}">start</button>
             <button on:click="{toggleScrolling}">pause / unpause</button>
