@@ -42,6 +42,15 @@
         }
     }
 
+    async function deleteSong() {
+        let url = `http://localhost:8000/songs/${id}`;
+        const response = await fetch(url, {
+            method: "delete",
+            headers: {"Origin": "http://localhost:5000"},
+        })
+        window.location.replace("http://localhost:5000/");
+    }
+
     async function transposeSong() {
         const degree = document.getElementById("degree").value;
         const form = document.getElementById('editor-form');
@@ -188,15 +197,15 @@ button {
             <label for="content">Content</label>
             <textarea rows="50" cols="100" id="content" name="content" bind:value="{data.content}"></textarea>
         </form>
-        <button on:click={saveSong}>Save</button>
     </div>
     <div id="viewer">
         <div id="viewer-controls">
-            
+            <button on:click={saveSong}>Save</button>
+            <button on:click={deleteSong}>Delete</button>
             <button on:click={transposeSong}>Transpose</button><input type="number" id="degree" value="1" />
-            <button on:click="{startScrolling}">start</button>
-            <button on:click="{toggleScrolling}">pause / unpause</button>
-            <button on:click="{stopScrolling}">stop</button>
+            <button on:click="{startScrolling}">Start</button>
+            <button on:click="{toggleScrolling}">Pause / Unpause</button>
+            <button on:click="{stopScrolling}">Stop</button>
             <button on:click={()=>updateFontSize('+')}>+</button>
             <button on:click={()=>updateFontSize('-')}>-</button>
         </div>

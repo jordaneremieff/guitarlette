@@ -12,9 +12,9 @@ class Token:
 
     This may represent the following:
 
-        * a chord value, such as 'C'
-        * an empty space to be used as a delimiter
-        * any string value, such as the lyrics in a song
+        * A chord value, such as 'C'
+        * An empty space to be used as a delimiter
+        * Any string value, such as the lyrics in a song
     """
 
     content: str

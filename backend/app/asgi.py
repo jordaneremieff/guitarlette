@@ -2,12 +2,10 @@ from starlette.endpoints import HTTPEndpoint
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
-from databases import Database
 
-from .schema import Song
+from .schema import SongSchema
+from .models import database, Song
 from .parser import Parser
-
-database = Database("sqlite:///guitarlette.db")
 
 
 app = Starlette()
@@ -20,53 +18,36 @@ class SongEndpoint(HTTPEndpoint):
     async def get(self, request) -> JSONResponse:
         song_id = request.path_params.get("id")
         if song_id:
-            query = """
-            SELECT * FROM songs WHERE id = :id
-            """
-            result = await database.fetch_one(query=query, values={"id": song_id})
-            if not result:
+            song = await Song.objects.get(id=song_id)
+            if not song:
                 return JSONResponse({"detail": "Not found"}, status_code=404)
-            song = dict(result)
-            song["viewer_content"] = Parser(song["content"]).html
-            return JSONResponse(song)
+            song_dict = song.get_dict()
+            return JSONResponse(song_dict)
         else:
-            query = "SELECT * FROM songs"
-
-        result = await database.fetch_all(query=query)
-        data = [dict(row) for row in result]
-        return JSONResponse(data)
+            songs = await Song.objects.all()
+            return JSONResponse([song.get_dict() for song in songs])
 
     async def post(self, request) -> JSONResponse:
         form = await request.form()
         data = dict(form)
-        song, errors = Song.validate_or_error(data)
+        validated_data, errors = SongSchema.validate_or_error(data)
         if errors:
             return JSONResponse(dict(errors), status_code=400)
-
+        validated_data = dict(validated_data)
         song_id = request.path_params.get("id")
-        song = dict(song)
-
         if song_id:
-            query = """
-            UPDATE songs
-            SET title = :title, artist = :artist, content = :content
-            WHERE id = :id
-            """
+            song = await Song.objects.get(id=song_id)
+            await song.update(**validated_data)
+            song_dict = song.get_dict()
         else:
-            query = """
-            INSERT INTO songs(title, artist, content)
-            VALUES (:title, :artist, :content)
-            """
+            song = await Song.objects.create(**validated_data)
+            song_dict = song.get_dict(created=True)
+        return JSONResponse(song_dict)
 
-        result = await database.execute(query=query, values=song)
-
-        if not song_id:
-            song["id"] = result
-            song["redirect"] = True
-
-        song["viewer_content"] = Parser(song["content"]).html
-
-        return JSONResponse(song)
+    async def delete(self, request) -> JSONResponse:
+        song_id = request.path_params.get("id")
+        await Song.objects.delete(id=song_id)
+        return JSONResponse({"detail": "Successfully deleted"})
 
 
 @app.route("/transpose")
@@ -92,4 +73,4 @@ async def shutdown():
     await database.disconnect()
 
 
-app.add_middleware(CORSMiddleware, allow_origins=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"])
