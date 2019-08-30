@@ -4,6 +4,7 @@ from starlette.endpoints import HTTPEndpoint, WebSocketEndpoint
 from starlette.responses import JSONResponse
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
+from orm.exceptions import NoMatch
 
 from .schema import SongSchema
 from .models import database, Song
@@ -22,7 +23,7 @@ class SongEndpoint(HTTPEndpoint):
 
 
 @app.websocket_route("/ws")
-class ComposerWebSocket(WebSocketEndpoint):
+class ComposerEndpoint(WebSocketEndpoint):
 
     encoding = "json"
 
@@ -33,35 +34,40 @@ class ComposerWebSocket(WebSocketEndpoint):
 
     async def create(self, message: typing.Dict) -> typing.Dict:
         _, errors = SongSchema.validate_or_error(message)
+        if errors:
+            return {"type": "song.errors", "detail": dict(errors)}
         song_obj = await Song.objects.create(**message)
         song_dict = song_obj.get_dict(new=True)
         return song_dict
 
     async def detail(self, message: typing.Dict) -> typing.Dict:
-        song = await Song.objects.get(id=message["id"])
-        if not song:
+        try:
+            song = await Song.objects.get(id=message["id"])
+        except NoMatch:
             return {"type": "song.missing", "detail": "Song not found"}
         song_dict = song.get_dict()
         return song_dict
 
     async def update(self, message: typing.Dict) -> typing.Dict:
         id = message.pop("id")
-        song_obj = await Song.objects.get(id=id)
-        if not song_obj:
+        try:
+            song = await Song.objects.get(id=id)
+        except NoMatch:
             return {"type": "song.missing", "detail": "Song not found"}
         _, errors = SongSchema.validate_or_error(message)
         if errors:
             return {"type": "song.error", "detail": dict(errors)}
-        await song_obj.update(**message)
-        song_dict = song_obj.get_dict()
+        await song.update(**message)
+        song_dict = song.get_dict()
         return song_dict
 
     async def delete(self, message: typing.Dict) -> typing.Dict:
         id = message.pop("id")
-        song_obj = await Song.objects.get(id=id)
-        if not song_obj:
+        try:
+            song = await Song.objects.get(id=id)
+        except NoMatch:
             return {"type": "song.missing", "detail": "Song not found"}
-        await song_obj.delete()
+        await song.delete()
         return {"type": "song.deleted", "detail": "Song successfully deleted"}
 
     async def transpose(self, message: typing.Dict) -> typing.Dict:

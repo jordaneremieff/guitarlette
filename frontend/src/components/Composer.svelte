@@ -10,7 +10,9 @@
 
     const ws = new ReconnectingWebSocket('ws://localhost:8000/ws');
     ws.onmessage = function(msg) {
+        console.log("test")
         const message = JSON.parse(msg.data);
+        console.log(message);
         if (message.type === "song.detail") {
             data.title = message.title;
             data.artist = message.artist;
@@ -24,6 +26,10 @@
         if (message.type == "song.transposed") {
             data.content = message.content;
             data.html = message.html;
+        }
+        if (message.type == "song.missing") || (message.type == "song.deleted") {
+            // TODO: Include message detail
+            window.location.replace(`http://localhost:5000/`);
         }
     }
 
