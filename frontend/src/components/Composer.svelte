@@ -25,7 +25,7 @@
             data.content = message.content;
             data.html = message.html;
         }
-        if (message.type == "song.missing") || (message.type == "song.deleted") {
+        if (message.type == "song.missing" || message.type == "song.deleted") {
             // TODO: Include message detail
             window.location.replace(`http://localhost:5000/`);
         }
