@@ -21,15 +21,14 @@ class Song(orm.Model):
     artist = orm.String(max_length=100)
     content = orm.Text(allow_null=True)
 
-    def get_dict(self, created: bool = False) -> typing.Dict:
+    def get_dict(self, new: bool = False) -> typing.Dict:
         html = Parser(self.content).html
         data = {
             "id": self.id,
             "title": self.title,
             "artist": self.artist,
             "content": self.content,
-            "viewer_content": html,
+            "html": html,
         }
-        if created:
-            data["redirect"] = True
+        data["type"] = "song.detail" if not new else "song.created"
         return data

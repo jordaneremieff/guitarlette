@@ -1,86 +1,92 @@
 <script>
     
     import { onMount } from "svelte";
+    import ReconnectingWebSocket from 'reconnecting-websocket';
 
 
-    let data = {"title": "untitled", "artist": "nobody", "content": ""};
+    let data = {"title": "untitled", "artist": "nobody", "content": "", "html": ""};
     let scroller = null;
     let scrollPaused = false;
+
+    const ws = new ReconnectingWebSocket('ws://localhost:8000/ws');
+    ws.onmessage = function(msg) {
+        const message = JSON.parse(msg.data);
+        if (message.type === "song.detail") {
+            data.title = message.title;
+            data.artist = message.artist;
+            data.content = message.content;
+            data.html = message.html;
+        } 
+        if (message.type === "song.created") {
+            let id = message.id;
+            window.location.replace(`http://localhost:5000/composer/${id}`);
+        }
+        if (message.type == "song.transposed") {
+            data.content = message.content;
+            data.html = message.html;
+        }
+    }
 
     export let id = null;
     if (id !== null) {
         onMount(async function() {
-            const response = await fetch(`http://localhost:8000/songs/${id}`);
-            const json = await response.json();
-            data = json;
+            ws.addEventListener("open", () => {
+                ws.send(JSON.stringify({"type": "song.detail", "id": id}));
+            });
         });
     }
 
-    async function saveSong() {
+    function createSong() {
         const form = document.getElementById('editor-form');
-        const formData = new FormData();
-        let url = "";
-        if (id !== null) {
-            url = `http://localhost:8000/songs/${id}`;
-        } else {
-            url = `http://localhost:8000/songs`;
-        }
-        formData.append("title", form.title.value);
-        formData.append("artist", form.artist.value);
-        formData.append("content", form.content.value);
-        const response = await fetch(url, {
-            method: "post",
-            body: formData,
-        })
-        const json = await response.json();
-        if (json.redirect === true) {
-            let id = json.id;
-            window.location.replace(`http://localhost:5000/composer/${id}`);
-        } else {
-            let viewerContent = document.getElementById("viewer-content");
-            viewerContent.innerHTML = json.viewer_content;
-        }
+        ws.send(JSON.stringify({
+            "type": "song.create",
+            "id": id,
+            "title": form.title.value,
+            "artist": form.artist.value,
+            "content":form.content.value
+        }));
     }
 
-    async function deleteSong() {
-        let url = `http://localhost:8000/songs/${id}`;
-        const response = await fetch(url, {
-            method: "delete",
-            headers: {"Origin": "http://localhost:5000"},
-        })
-        window.location.replace("http://localhost:5000/");
+    function updateSong() {
+        const form = document.getElementById('editor-form')
+        ws.send(JSON.stringify({
+            "type": "song.update",
+            "id": id,
+            "title": form.title.value,
+            "artist": form.artist.value,
+            "content":form.content.value
+        }));
+    }
+
+    function deleteSong() {
+        ws.send(JSON.stringify({
+            "type": "song.delete",
+            "id": id
+        }));
     }
 
     async function transposeSong() {
         const degree = document.getElementById("degree").value;
         const form = document.getElementById('editor-form');
-        const formData = new FormData();
-        formData.append("content", data.content);
-        formData.append("degree", degree);
-        const response = await fetch("http://localhost:8000/transpose", {
-            method: "post",
-            body: formData,
-        })
-        const json = await response.json();
-        let editorContent = document.getElementById("editor-content");
-        let viewerContent = document.getElementById("viewer-content");
-        data.content = json.content;
-        viewerContent.innerHTML = json.viewer_content;
-
+        ws.send(JSON.stringify({
+            "type": "song.transpose",
+            "content":form.content.value,
+            "degree": degree
+        }));
     }
 
     function startScrolling() {
-        var topPos = viewer.offsetTop
-        stopScrolling()
-        scroll(topPos)
+        var topPos = viewer.offsetTop;
+        stopScrolling();
+        scroll(topPos);
     }
 
     function stopScrolling() {
-        clearInterval(scroller)
+        clearInterval(scroller);
     }
 
     function toggleScrolling() {
-        scrollPaused = scrollPaused ? false : true
+        scrollPaused = scrollPaused ? false : true;
     }
 
     function scroll(topPos) {
@@ -88,19 +94,19 @@
         viewer.scrollTop = topPos - viewerContent.offsetTop
         scroller = setInterval(function() { 
             if(!scrollPaused) {
-                viewer.scrollTop += 20
+                viewer.scrollTop += 2
             }
-        }, 500)
+        }, 1000)
     }
 
     function updateFontSize(op) {
         let viewerContent = document.getElementById("viewer-content");
         var fontSize = parseInt(window.getComputedStyle(viewerContent, null).getPropertyValue('font-size'));
         if (op == "-")
-            fontSize -= 5
+            fontSize -= 5;
         else
-            fontSize += 5
-        viewerContent.style.fontSize = fontSize.toString()+"px"
+            fontSize += 5;
+        viewerContent.style.fontSize = fontSize.toString()+"px";
     }
 </script>
 
@@ -200,17 +206,21 @@ button {
     </div>
     <div id="viewer">
         <div id="viewer-controls">
-            <button on:click={saveSong}>Save</button>
+            {#if id}
+                <button on:click={updateSong}>Save</button>
+                <button on:click={deleteSong}>Delete</button>
+            {:else}
+                <button on:click={createSong}>Save</button>
+            {/if}
             <button on:click={deleteSong}>Delete</button>
             <button on:click={transposeSong}>Transpose</button><input type="number" id="degree" value="1" />
-            <button on:click="{startScrolling}">Start</button>
+            <button on:click="{startScrolling}">Start / Reset</button>
             <button on:click="{toggleScrolling}">Pause / Unpause</button>
-            <button on:click="{stopScrolling}">Stop</button>
             <button on:click={()=>updateFontSize('+')}>+</button>
             <button on:click={()=>updateFontSize('-')}>-</button>
         </div>
         <div id="viewer-content">
-            {@html data.viewer_content}
+            {@html data.html}
         </div>
     </div>
     <div id="clear"></div>
