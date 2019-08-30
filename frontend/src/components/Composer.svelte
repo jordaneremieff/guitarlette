@@ -65,7 +65,7 @@
         }));
     }
 
-    async function transposeSong() {
+    function transposeSong() {
         const degree = document.getElementById("degree").value;
         const form = document.getElementById('editor-form');
         ws.send(JSON.stringify({
