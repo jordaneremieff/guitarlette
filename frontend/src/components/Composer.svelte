@@ -10,9 +10,7 @@
 
     const ws = new ReconnectingWebSocket('ws://localhost:8000/ws');
     ws.onmessage = function(msg) {
-        console.log("test")
         const message = JSON.parse(msg.data);
-        console.log(message);
         if (message.type === "song.detail") {
             data.title = message.title;
             data.artist = message.artist;
