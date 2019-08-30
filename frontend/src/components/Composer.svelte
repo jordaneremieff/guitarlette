@@ -212,7 +212,6 @@ button {
             {:else}
                 <button on:click={createSong}>Save</button>
             {/if}
-            <button on:click={deleteSong}>Delete</button>
             <button on:click={transposeSong}>Transpose</button><input type="number" id="degree" value="1" />
             <button on:click="{startScrolling}">Start / Reset</button>
             <button on:click="{toggleScrolling}">Pause / Unpause</button>
