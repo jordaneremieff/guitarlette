@@ -2,7 +2,10 @@
 
 Work in progress.
 
-**Requirements**: Python 3.7+
+## Requirements
+
+- Python 3.7+
+- PostgreSQL
 
 ## What?
 

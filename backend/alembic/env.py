@@ -19,6 +19,7 @@ fileConfig(config.config_file_name)
 # alembic revision --autogenerate -m ""
 backend_dir = os.path.abspath(os.getcwd())
 sys.path.append(backend_dir)
+from project.utils import get_db_url
 from project.models import metadata
 
 # target_metadata = mymodel.Base.metadata
@@ -43,7 +44,7 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = get_db_url()
     context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
 
     with context.begin_transaction():
@@ -57,10 +58,10 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+    configuration = config.get_section(config.config_ini_section)
+    configuration["sqlalchemy.url"] = get_db_url()
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
+        configuration, prefix="sqlalchemy.", poolclass=pool.NullPool
     )
 
     with connectable.connect() as connection:

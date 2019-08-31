@@ -2,9 +2,8 @@ import typesystem
 
 
 class SongSchema(typesystem.Schema):
-    title = typesystem.String(max_length=100)
-    artist = typesystem.String(max_length=100)
+    title = typesystem.String(max_length=255)
     content = typesystem.Text()
 
     def __str__(self) -> str:
-        return f"{self.title} - {self.artist}"
+        return self.title

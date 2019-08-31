@@ -1,15 +1,31 @@
 <script>
     
     import { onMount } from "svelte";
+    import ArtistModal from './ArtistModal.svelte';
     import ReconnectingWebSocket from 'reconnecting-websocket';
 
 
-    let data = {"title": "untitled", "artist": "nobody", "content": "", "html": ""};
+    let data = {"title": "", "artist": "", "content": "", "html": ""};
+    let showArtistModal = false;
+    let artists = [];
     let scroller = null;
     let scrollPaused = false;
 
+    export let id = null;
+    
+    onMount(async function() {
+        const response = await fetch("http://localhost:8000/artists");
+        const json = await response.json();
+        artists = json;
+        if (id !== null) {
+            ws.addEventListener("open", () => {
+                ws.send(JSON.stringify({"type": "song.get", "id": id}));
+            });
+        }
+    });
+
     const ws = new ReconnectingWebSocket('ws://localhost:8000/ws');
-    ws.onmessage = function(msg) {
+    ws.onmessage = async function(msg) {
         const message = JSON.parse(msg.data);
         if (message.type === "song.detail") {
             data.title = message.title;
@@ -21,6 +37,13 @@
             let id = message.id;
             window.location.replace(`http://localhost:5000/composer/${id}`);
         }
+        if (message.type === "artist.created") {
+            const response = await fetch("http://localhost:8000/artists");
+            const json = await response.json();
+            artists = json;
+            data.artist = message.name;
+            showArtistModal = false;
+        }
         if (message.type == "song.transposed") {
             data.content = message.content;
             data.html = message.html;
@@ -31,17 +54,8 @@
         }
     }
 
-    export let id = null;
-    if (id !== null) {
-        onMount(async function() {
-            ws.addEventListener("open", () => {
-                ws.send(JSON.stringify({"type": "song.detail", "id": id}));
-            });
-        });
-    }
-
     function createSong() {
-        const form = document.getElementById('editor-form');
+        const form = document.getElementById("editor-form");
         ws.send(JSON.stringify({
             "type": "song.create",
             "id": id,
@@ -76,6 +90,14 @@
             "type": "song.transpose",
             "content":form.content.value,
             "degree": degree
+        }));
+    }
+
+    function createArtist() {
+        const form = document.getElementById("artist-form");
+        ws.send(JSON.stringify({
+            "type": "artist.create",
+            "name": form.name.value
         }));
     }
 
@@ -196,14 +218,33 @@ button {
 
 
 
+{#if showArtistModal}
+    <ArtistModal on:close="{() => showArtistModal = false}">
+        <h2 slot="header"><small>+</small> Add artist</h2>
+        <form id="artist-form" on:submit|preventDefault>
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name">
+            <button on:click={createArtist}>Save</button>
+        </form>
+    </ArtistModal>
+{/if}
+
 <h1>Composer</h1>
 <div id="container">
     <div id="editor">
-        <form id="editor-form">
+        <form id="editor-form" on:submit|preventDefault>
             <label for="title">Title</label>
             <input type="text" id="title" name="title" value="{data.title}">
             <label for="artist">Artist</label>
-            <input type="text" id="artist" name="artist" value="{data.artist}">
+            
+
+
+            <select id="artist" name="artist" bind:value="{data.artist}">
+                {#each artists as artist}
+                    <option value="{artist.name}">{artist.name}</option>
+                {/each}
+            </select>
+            <button on:click="{() => showArtistModal = true}">+</button>
             <label for="content">Content</label>
             <textarea rows="50" cols="100" id="content" name="content" bind:value="{data.content}"></textarea>
         </form>

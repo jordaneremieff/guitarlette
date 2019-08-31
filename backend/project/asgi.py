@@ -7,7 +7,7 @@ from starlette.middleware.cors import CORSMiddleware
 from orm.exceptions import NoMatch
 
 from .schema import SongSchema
-from .models import database, Song
+from .models import database, Song, Artist
 from .parser import Parser
 
 
@@ -16,10 +16,15 @@ app.debug = True
 
 
 @app.route("/songs")
-class SongEndpoint(HTTPEndpoint):
-    async def get(self, request) -> JSONResponse:
-        songs = await Song.objects.all()
-        return JSONResponse([{"title": song.title, "id": song.id} for song in songs])
+async def get_songs(request) -> JSONResponse:
+    songs = await Song.objects.all()
+    return JSONResponse([{"title": song.title, "id": song.id} for song in songs])
+
+
+@app.route("/artists")
+async def get_artists(request) -> JSONResponse:
+    artists = await Artist.objects.all()
+    return JSONResponse([{"name": artist.name} for artist in artists])
 
 
 @app.websocket_route("/ws")
@@ -28,28 +33,33 @@ class ComposerEndpoint(WebSocketEndpoint):
     encoding = "json"
 
     async def on_receive(self, websocket, message: typing.Dict) -> None:
-        method = f"{message.pop('type').split('.')[1]}"
+        _type, _method = message.pop("type").split(".")
+        method = f"{_method}_{_type}"
         response = await getattr(self, method)(message)
         await websocket.send_json(response)
 
-    async def create(self, message: typing.Dict) -> typing.Dict:
+    async def create_song(self, message: typing.Dict) -> typing.Dict:
         _, errors = SongSchema.validate_or_error(message)
         if errors:
             return {"type": "song.errors", "detail": dict(errors)}
-        song_obj = await Song.objects.create(**message)
-        song_dict = song_obj.get_dict(new=True)
+        artist_obj = await Artist.objects.get(name=message["artist"])
+        song_obj = await Song.objects.create(
+            title=message["title"], content=message["content"], artist=artist_obj
+        )
+        song_dict = await song_obj.get_dict(new=True)
         return song_dict
 
-    async def detail(self, message: typing.Dict) -> typing.Dict:
+    async def get_song(self, message: typing.Dict) -> typing.Dict:
+        id = int(message.pop("id"))
         try:
-            song = await Song.objects.get(id=message["id"])
+            song = await Song.objects.get(id=id)
         except NoMatch:
             return {"type": "song.missing", "detail": "Song not found"}
-        song_dict = song.get_dict()
+        song_dict = await song.get_dict()
         return song_dict
 
-    async def update(self, message: typing.Dict) -> typing.Dict:
-        id = message.pop("id")
+    async def update_song(self, message: typing.Dict) -> typing.Dict:
+        id = int(message.pop("id"))
         try:
             song = await Song.objects.get(id=id)
         except NoMatch:
@@ -57,11 +67,14 @@ class ComposerEndpoint(WebSocketEndpoint):
         _, errors = SongSchema.validate_or_error(message)
         if errors:
             return {"type": "song.error", "detail": dict(errors)}
-        await song.update(**message)
-        song_dict = song.get_dict()
+        artist_obj = await Artist.objects.get(name=message["artist"])
+        await song.update(
+            title=message["title"], content=message["content"], artist=artist_obj
+        )
+        song_dict = await song.get_dict()
         return song_dict
 
-    async def delete(self, message: typing.Dict) -> typing.Dict:
+    async def delete_song(self, message: typing.Dict) -> typing.Dict:
         id = message.pop("id")
         try:
             song = await Song.objects.get(id=id)
@@ -70,7 +83,7 @@ class ComposerEndpoint(WebSocketEndpoint):
         await song.delete()
         return {"type": "song.deleted", "detail": "Song successfully deleted"}
 
-    async def transpose(self, message: typing.Dict) -> typing.Dict:
+    async def transpose_song(self, message: typing.Dict) -> typing.Dict:
         content = message["content"]
         degree = int(message["degree"])
         parser = Parser(content)
@@ -80,6 +93,11 @@ class ComposerEndpoint(WebSocketEndpoint):
             "content": parser.content,
             "html": parser.html,
         }
+
+    async def create_artist(self, message: typing.Dict) -> typing.Dict:
+        name = message["name"]
+        await Artist.objects.create(name=name)
+        return {"type": "artist.created", "name": name}
 
     # async def on_chord_hover(self, websocket, message) -> str:
     #     # TODO: Maybe not do it this way?

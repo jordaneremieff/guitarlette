@@ -1,6 +1,6 @@
 starlette
 python-multipart
-databases[sqlite]
+databases[postgresql]
 typesystem
 alembic
 pychord
