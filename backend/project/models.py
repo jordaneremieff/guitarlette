@@ -32,3 +32,15 @@ class Song(orm.Model):
         }
         data["type"] = "song.detail" if not new else "song.created"
         return data
+
+
+class User(orm.Model):
+
+    __tablename__ = "users"
+    __database__ = database
+    __metadata__ = metadata
+
+    id = orm.Integer(primary_key=True)
+    name = orm.String(max_length=255)
+    email = orm.String(max_length=255, unique=True)
+    password = orm.String(max_length=255)

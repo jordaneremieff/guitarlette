@@ -25,7 +25,7 @@ alembic upgrade head
 Then run the server:
 
 ```shell
-uvicorn app.asgi:app
+uvicorn project.asgi:app
 ```
 
 ### Frontend
