@@ -11,7 +11,7 @@
 <h1>Songs</h1>
 {#each data as song}
     <ul>
-        <li><a href="http://localhost:5000/composer/{song.id}">{song.title}</a></li>
+        <li><a href="http://localhost:5000/composer/{song.id}">{song.title} - {song.artist}</a></li>
     </ul>
 {/each}
 

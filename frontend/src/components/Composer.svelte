@@ -15,18 +15,18 @@
     
     onMount(async function() {
         const response = await fetch("http://localhost:8000/artists");
-        const json = await response.json();
-        artists = json;
+        artists = await response.json();
         if (id !== null) {
-            ws.addEventListener("open", () => {
-                ws.send(JSON.stringify({"type": "song.get", "id": id}));
-            });
+            ws.send(JSON.stringify({"type": "song.get", "id": id}));
         }
     });
 
     const ws = new ReconnectingWebSocket('ws://localhost:8000/ws');
+
     ws.onmessage = async function(msg) {
+
         const message = JSON.parse(msg.data);
+
         if (message.type === "song.detail") {
             data.title = message.title;
             data.artist = message.artist;
@@ -39,8 +39,7 @@
         }
         if (message.type === "artist.created") {
             const response = await fetch("http://localhost:8000/artists");
-            const json = await response.json();
-            artists = json;
+            artists = await response.json();;
             data.artist = message.name;
             showArtistModal = false;
         }
@@ -236,9 +235,6 @@ button {
             <label for="title">Title</label>
             <input type="text" id="title" name="title" value="{data.title}">
             <label for="artist">Artist</label>
-            
-
-
             <select id="artist" name="artist" bind:value="{data.artist}">
                 {#each artists as artist}
                     <option value="{artist.name}">{artist.name}</option>

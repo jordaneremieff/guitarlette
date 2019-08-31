@@ -17,8 +17,13 @@ app.debug = True
 
 @app.route("/songs")
 async def get_songs(request) -> JSONResponse:
-    songs = await Song.objects.all()
-    return JSONResponse([{"title": song.title, "id": song.id} for song in songs])
+    songs = await Song.objects.select_related("artist").all()
+    return JSONResponse(
+        [
+            {"id": song.id, "title": song.title, "artist": song.artist.name}
+            for song in songs
+        ]
+    )
 
 
 @app.route("/artists")
@@ -52,7 +57,7 @@ class ComposerEndpoint(WebSocketEndpoint):
     async def get_song(self, message: typing.Dict) -> typing.Dict:
         id = int(message.pop("id"))
         try:
-            song = await Song.objects.get(id=id)
+            song = await Song.objects.select_related("artist").get(id=id)
         except NoMatch:
             return {"type": "song.missing", "detail": "Song not found"}
         song_dict = await song.get_dict()
@@ -61,7 +66,7 @@ class ComposerEndpoint(WebSocketEndpoint):
     async def update_song(self, message: typing.Dict) -> typing.Dict:
         id = int(message.pop("id"))
         try:
-            song = await Song.objects.get(id=id)
+            song = await Song.objects.select_related("artist").get(id=id)
         except NoMatch:
             return {"type": "song.missing", "detail": "Song not found"}
         _, errors = SongSchema.validate_or_error(message)
