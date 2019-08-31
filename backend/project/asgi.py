@@ -1,6 +1,6 @@
 import typing
 
-from starlette.endpoints import HTTPEndpoint, WebSocketEndpoint
+from starlette.endpoints import WebSocketEndpoint
 from starlette.responses import JSONResponse
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
@@ -66,7 +66,7 @@ class ComposerEndpoint(WebSocketEndpoint):
     async def update_song(self, message: typing.Dict) -> typing.Dict:
         id = int(message.pop("id"))
         try:
-            song = await Song.objects.select_related("artist").get(id=id)
+            song = await Song.objects.get(id=id)
         except NoMatch:
             return {"type": "song.missing", "detail": "Song not found"}
         _, errors = SongSchema.validate_or_error(message)

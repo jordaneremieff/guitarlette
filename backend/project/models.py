@@ -32,8 +32,7 @@ class Song(orm.Model):
     content = orm.Text(allow_null=True)
 
     async def get_dict(self, new: bool = False) -> typing.Dict:
-        if new:
-            await self.artist.load()
+        await self.artist.load()
         html = Parser(self.content).html
         data = {
             "id": self.id,

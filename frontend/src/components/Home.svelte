@@ -3,8 +3,7 @@
     let data = [];
     onMount(async function() {
         const response = await fetch("http://localhost:8000/songs");
-        const json = await response.json();
-        data = json;
+        data = await response.json();
     });
 </script>
 

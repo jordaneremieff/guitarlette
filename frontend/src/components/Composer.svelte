@@ -119,7 +119,7 @@
         viewer.scrollTop = topPos - viewerContent.offsetTop
         scroller = setInterval(function() { 
             if(!scrollPaused) {
-                viewer.scrollTop += 2
+                viewer.scrollTop += 50
             }
         }, 1000)
     }
