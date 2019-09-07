@@ -3,6 +3,7 @@ import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
+import postcss from 'rollup-plugin-postcss';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -16,6 +17,8 @@ export default {
 	},
 	plugins: [
 		svelte({
+			emitCss: true,
+
 			// enable run-time checks when not in production
 			dev: !production,
 			// we'll extract any component CSS out into
@@ -24,6 +27,8 @@ export default {
 				css.write('public/bundle.css');
 			}
 		}),
+
+
 
 		// If you have external dependencies installed from
 		// npm, you'll most likely need these plugins. In
@@ -35,6 +40,18 @@ export default {
 			dedupe: importee => importee === 'svelte' || importee.startsWith('svelte/')
 		}),
 		commonjs(),
+		postcss({
+	      extract: true,
+	      minimize: true,
+	      use: [
+	        ['sass', {
+	          includePaths: [
+	            './src/theme',
+	            './node_modules'
+	          ]
+	        }]
+	      ]
+	    }),
 
 		// Watch the `public` directory and refresh the
 		// browser on changes when not in production

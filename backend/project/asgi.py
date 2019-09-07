@@ -80,7 +80,7 @@ class ComposerEndpoint(WebSocketEndpoint):
         return song_dict
 
     async def delete_song(self, message: typing.Dict) -> typing.Dict:
-        id = message.pop("id")
+        id = int(message.pop("id"))
         try:
             song = await Song.objects.get(id=id)
         except NoMatch:
