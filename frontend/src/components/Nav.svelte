@@ -2,8 +2,7 @@
   import Tab, {Icon, Label} from '@smui/tab';
   import TabBar from '@smui/tab-bar';
   import Button from '@smui/button';
-  import {Router, Route, Link} from "svelte-routing";
-  import { navigate, link } from "svelte-routing";
+  import {Router, Route, navigate, link} from "svelte-routing";
 
   import Home from "./Home.svelte";
   import Composer from "./Composer.svelte";
