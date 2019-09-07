@@ -1,6 +1,5 @@
 <script>
   import { onMount } from "svelte";
-  import DataTable, {Head, Body, Row, Cell} from '@smui/data-table';
   import List, {Item, Separator, Text, PrimaryText, SecondaryText} from '@smui/list';
   let data = [];
   onMount(async function() {
@@ -8,12 +7,6 @@
     data = await response.json();
   });
 </script>
-
-<style>
-  .song-list {
-    color:red;
-  }
-</style>
 
 <h1>Songs</h1>
 <div>
