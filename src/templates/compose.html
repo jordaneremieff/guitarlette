@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block title %}guitarlette{% endblock title %}
+{% block extra_css %}
+  #song-controls {
+    display: flex;
+    justify-content: space-evenly;
+    background-color: #ffffff;
+    margin: 10px;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    padding: 8px;
+    box-shadow: 0 0 30px 1px #d8d8d8;
+    -webkit-box-shadow: 0 0 30px 1px #d8d8d8;
+    -moz-box-shadow: 0 0 30px 1px #d8d8d8;
+
+  }
+
+  .song-controls-item {
+    display: inline-block;
+    padding: 3px;
+    text-align: center;
+  }
+
+  .song-controls-item-label {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  #song-viewer {
+    padding-left: 5px;
+    padding-right: 5px;
+    background: #ffffff;
+    height: 100%;
+    margin: auto 0;
+  }
+
+  #song-content {
+    margin: auto;
+  }
+
+  #source-content {
+    margin: auto;
+    display: block;
+  }
+
+  .chord {
+    font-weight: bold;
+  }
+
+  .chord-delimiter {
+    padding: 3px;
+  }
+{% endblock extra_css %}
+{% block content %}
+  <div id="song-controls">
+      <div class="song-controls-item">
+        <div class="song-controls-item-label">transpose</div>
+        <button type="button" onclick="transpose('-')">-</button>
+        <span id="transpose-index">0</span>
+        <button type="button" onclick="transpose('+')">+</button>
+      </div>
+      <div class="song-controls-item">
+        <div class="song-controls-item-label">scroll</div>
+        <button type="button" onclick="toggle_scroll()">[>]</button>
+        <span id="scroll-speed">0</span>
+        <button type="button" onclick="stop_scroll()">[ ]</button>
+      </div>
+      <div class="song-controls-item">
+        <div class="song-controls-item-label">font</div>
+        <button type="button" onclick="adjust_font_size('-')">-</button>
+        <span id="font-size-index">0</span>
+        <button type="button" onclick="adjust_font_size('+')">+</button>
+      </div>
+      <div class="song-controls-item">
+        <div class="song-controls-item-label">edit</div>
+        <button type="button" onclick="toggle_form()">edit</button>
+      </div>
+    </div>
+    <form method="POST" action="/download">
+    <div class="song-controls-item">
+      <div class="song-controls-item-label">options</div>
+      <input type="submit" name="download" id="download" value="download" />
+      </div>
+    </form>
+  <div id="song-viewer">
+    <h1>{{ song_title }}</h1>
+    <textarea id="source-content" rows="30" cols="110" style="white-space: pre-wrap;">{{ source_content }}</textarea>
+    <div id="song-content" style="display: none;"></div>
+  </div>
+  <script>
+    const SONG_VIEWER = document.getElementById("song-viewer")
+    const SONG_CONTENT = document.getElementById("song-content")
+    const SOURCE_CONTENT = document.getElementById("source-content")
+    const SONG_VIEWER_TOP_POS = SONG_VIEWER.offsetTop
+
+    const FONT_SIZE_MAX = 35
+    const FONT_SIZE_MIN = 5
+    const FONT_SIZE_DEFAULT = 15
+    const FONT_SIZE_STEP = 5
+    const TRANSPOSE_LIMIT = 11
+    const TRANSPOSE_STEP = 1
+    const SCROLL_SPEED_MAX = 20
+    const SCROLL_SPEED_INTERVAL = 100
+
+    var font_size_index = 0
+    var transpose_index = 0
+    var scroll_speed = 1
+    var scroll_interval = null
+    var scroll_paused = false
+    var edit_mode = false
+
+    function toggle_scroll() {
+      if (scroll_interval !== null) {
+        if (scroll_paused) {
+          scroll_paused = false
+        }
+        else {
+          scroll_paused = true
+        }
+      }
+      else {
+        document.getElementById("scroll-speed").innerHTML = 1
+        SONG_VIEWER.scrollTop = SONG_VIEWER_TOP_POS - SONG_CONTENT.offsetTop
+        var limit = SONG_CONTENT.getBoundingClientRect().height
+        scroll_interval = setInterval(function() {
+          if (scroll_paused) {
+            window.scrollBy({
+                    top: scroll_speed,
+                    left: 0,
+                    behavior : "smooth"
+                });
+          }
+        }, SCROLL_SPEED_INTERVAL)
+        scroll_paused = true
+      }
+    }
+
+    async function toggle_form() {
+      if(!edit_mode) {
+        edit_mode = true
+        SOURCE_CONTENT.style.display = ""
+        SONG_CONTENT.style.display = "none"
+      } 
+      else {
+        response = await request("/parse", {
+          "content": SOURCE_CONTENT.value
+        })
+        edit_mode = false
+        SONG_CONTENT.style.display = ""
+        SOURCE_CONTENT.style.display = "none"
+        SONG_CONTENT.innerHTML = response.html_content
+      }
+    }
+
+    function stop_scroll() {
+      clearInterval(scroll_interval)
+      scroll_paused = false
+      scroll_interval = null
+      SONG_VIEWER.scrollTop = 0
+      document.getElementById("scroll-speed").innerHTML = 0
+    }
+
+    function adjust_scroll_speed(operator) {
+      var step = operator === "-" ? -1 : 1
+      var next_scroll_speed = scroll_speed + step
+      if (next_scroll_speed > 0 && next_scroll_speed < SCROLL_SPEED_MAX) {
+        scroll_speed += step
+        document.getElementById("scroll-speed").innerHTML = scroll_speed
+      }
+    }
+
+    function adjust_font_size(operator) {
+      var step = operator === "-" ? -1 : 1
+      var step_px = step * FONT_SIZE_STEP
+      var new_font_size = parseInt(window.getComputedStyle(SONG_CONTENT, null).getPropertyValue("font-size")) + step_px
+      if (new_font_size >= FONT_SIZE_MAX || new_font_size < FONT_SIZE_MIN) {
+        new_font_size = FONT_SIZE_DEFAULT
+        font_size_index = 0
+      } 
+      else {
+        font_size_index += step
+      }
+      SONG_CONTENT.style.fontSize = new_font_size.toString() + "px"
+      document.getElementById("font-size-index").innerHTML = font_size_index
+    }
+
+    async function transpose(operator) {
+      var step = operator === "-" ? -1 : 1
+      var limit = (TRANSPOSE_LIMIT + 1) * step
+      if (transpose_index + step != (TRANSPOSE_LIMIT + 1) * step) {
+        transpose_index += step
+      }
+      else {
+        transpose_index = 0
+      }
+      response = await request("/transpose", {
+        "content": SOURCE_CONTENT.value,
+        "degree": transpose_index
+      })
+      SONG_CONTENT.innerHTML = response.html_content
+      document.getElementById("transpose-index").innerHTML = transpose_index
+    }
+
+    async function request(endpoint, json_body) {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(json_body)
+      })
+      const json = await response.json();
+
+      return json
+    }
+
+    document.addEventListener("keydown", async (event) => {
+      if (event.code === "Space" && event.target !== SOURCE_CONTENT) {
+        event.preventDefault()
+      }
+      if (scroll_interval !== null) {
+        if (event.code == "Escape" || event.code == "Space")
+          toggle_scroll()
+        if (event.code === "Equal")
+          adjust_scroll_speed("+")
+        if (event.code == "Minus")
+          adjust_scroll_speed("-")
+      }
+    })
+  </script>
+{% endblock content %}

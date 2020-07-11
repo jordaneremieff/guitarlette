@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{% block title %}guitarlette{% endblock title %}</title>
+  <link rel="shortcut icon" href="{{ url_for('static', path='favicon.ico') }}">
+  <style type="text/css">
+      html,
+  body {
+    height: 100%;
+  }
+
+  html {
+    display: table;
+    margin: auto;
+  }
+
+  body {
+    font-family: "Roboto", sans-serif;
+    width: 700px;
+  }
+
+  nav {
+    padding: 10px;
+    font-size: 1em;
+    margin-bottom: 5px;
+  }
+
+  ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    float: right;
+  }
+
+  li {
+    float: left;
+    margin-top: 3px;
+    margin-left: 5px;
+
+  }
+
+  li a {
+    display: block;
+    border-radius: 1em;
+    background-color: #f0f0f0;
+    color: #000000;
+    text-align: center;
+    padding: 8px 12px;
+    text-decoration: none;
+    float: left
+  }
+
+  li a:hover {
+    border-radius: 1em;
+    background-color: #d8d8d8;
+  }
+
+  #wrapper {
+    padding: 10px;
+    margin-top: 20px;
+    box-shadow: 0 0 20px 5px #d8d8d8;
+    -webkit-box-shadow: 0 0 20px 5px #d8d8d8;
+    -moz-box-shadow: 0 0 20px 5px #d8d8d8;
+  }
+
+  #nav-title {
+    margin-top: 3px;
+    margin-left: 5px;
+    font-size: 20px;
+  }
+
+
+  {% block extra_css %}
+  {% endblock extra_css %}
+  </style>
+</head>
+  <body>
+    <div id="wrapper">
+      <nav>
+        <span id="nav-title">&#127928;guitarlette</span>
+        <ul>
+          <li><a href="/" target="_blank">new</a></li>
+          <li><a href="/about">about</a></li>
+        </ul>
+      </nav>
+    {% block content %}{% endblock content %}
+    </div>
+  </body>
+</html>

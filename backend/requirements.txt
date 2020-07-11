@@ -1,7 +1,0 @@
-starlette
-python-multipart
-databases[postgresql]
-typesystem
-alembic
-pychord
-orm
