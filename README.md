@@ -1,3 +1,5 @@
 # guitarlette
 
-Work in progress.
+A songwriting tool for guitarists 🎸
+
+Live: https://guitarlette.app
