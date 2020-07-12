@@ -10,6 +10,7 @@ provider:
 functions:
   app:
     handler: src.app.handler
+    memorySize: 512
     events:
       - httpApi: "*"
 
