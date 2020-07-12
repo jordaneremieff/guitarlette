@@ -21,6 +21,7 @@
     font-size:15px;
   }
 
+
   .control-item ion-icon:hover {
     color: #484848;
   }
@@ -58,11 +59,11 @@
     margin-top:60px;
     min-height: 500px;
     padding: 8px;
-    font-size:15px;
+    font-size:12px;
   }
 
   #editor-content {
-    margin-top: 5px;
+    margin-top: 70px;
   }
 
   .chord {
@@ -83,6 +84,7 @@
     padding: 2px;
     margin: 2px;
     width: 100%;
+    -webkit-appearance: none;
   }
 
   #options button:focus {
@@ -95,7 +97,11 @@
 
   #options button:active {
     border: none;
-}
+  }
+  textarea {
+    display: block;
+  }
+
 </style>
 {% endblock extra_css %}
 {% block content %}
@@ -103,7 +109,7 @@
   {% include "snippets/options.html" %}
   <div id="viewer">
     <div id="viewer-wrapper">
-      <textarea id="editor-content" rows="60" cols="83" style="white-space: pre-wrap;font-size: 15px;">{% include "snippets/instructions.txt" %}</textarea>
+      <textarea id="editor-content" rows="40" cols="108" style="white-space: pre-wrap;">{% include "snippets/instructions.txt" %}</textarea>
       <div id="viewer-content" style="display: none;"></div>
     </div>
   </div>
@@ -116,10 +122,10 @@
     const DOWNLOAD_CONTENT = document.getElementById("download-content")
     
 
-    const FONT_SIZE_MAX = 5
-    const FONT_SIZE_MIN = 5
-    const FONT_SIZE_DEFAULT = 15
-    const FONT_SIZE_STEP = 5
+    const FONT_SIZE_MAX = 36
+    const FONT_SIZE_MIN = 6
+    const FONT_SIZE_DEFAULT = 12
+    const FONT_SIZE_STEP = 6
 
     const TRANSPOSE_LIMIT = 11
     const TRANSPOSE_STEP = 1
