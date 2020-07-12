@@ -1,0 +1,54 @@
+[Instructions]
+
+1. Use this form to compose a song in unlocked mode.
+
+    * Chords and lyrics should be placed on separate lines.
+
+        Example:
+
+        C                    Em
+        Mega Guillotine, I love you
+        C                      Am          D
+        Mega Guillotine, I’m rooting for you
+
+             Em                  D   G   C
+        We’re praying for you every day
+            Am                 D    C
+        We’re praying for you every  day
+
+    * Click the lock icon to enter locked mode, go ahead and try now!
+
+2. Play with the controls in locked mode.
+
+    * Transpose
+
+        Transpose the chords in the song up or down one degree using the chords defined
+        in unlocked mode.
+
+    * Scroll
+
+        Play, pause, or stop auto-scrolling the page.
+
+        This can be done using the cursor by clicking one of the buttons, or by 
+        using the following keyboard shortcuts:
+
+            [Esc] Stop
+            [Space] Play/Pause
+            [+/-] Increase/Decrease Speed
+
+    * Font
+
+        Increase or decrease the font-size.
+
+3. Download a text file containing your song.
+
+    * Currently songs are not stored, and they will disappear after leaving this page.
+      To save them, you will need to copy/paste the content manually or use the download
+      button.
+
+    * I intend to implement at least an import option and potentially some form of
+      cloud storage for content.
+
+4. Have fun!
+
+    * There is an option "clear" which will empty this form.

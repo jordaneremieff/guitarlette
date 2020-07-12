@@ -1,20 +1,22 @@
 from io import BytesIO
 from datetime import datetime
+from pathlib import Path
 
-import uvicorn
+from mangum import Mangum
 from fastapi import FastAPI, Request, Body, Form
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
-
 from starlette.templating import Jinja2Templates
 
-from parser import SongParser
+from .parser import SongParser
 
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount(
+    "/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static"
+)
 
 
 @app.get("/")
@@ -41,14 +43,13 @@ def transpose(content: str = Body(...), degree: int = Body(...)):
 
 
 @app.post("/download")
-def download(request: Request, editor_content: str = Form(...), title: str = Form(...)):
-    filename = f"{title}-{datetime.now().isoformat()}.txt"
+def download(request: Request, download_content: str = Form(...)):
+    filename = f"guitarlette-{datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}.txt"
     return StreamingResponse(
-        BytesIO(editor_content.encode()),
+        BytesIO(download_content.encode()),
         headers={"Content-Disposition": f"attachment; filename={filename}"},
         media_type="text/plain",
     )
 
 
-if __name__ == "__main__":
-    uvicorn.run(app, debug=True)
+handler = Mangum(app, lifespan="off")

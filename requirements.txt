@@ -1,0 +1,6 @@
+fastapi
+python-multipart
+jinja2
+aiofiles
+pychord
+mangum==0.10.0b1

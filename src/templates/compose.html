@@ -1,188 +1,255 @@
 {% extends "base.html" %}
 {% block title %}guitarlette{% endblock title %}
 {% block extra_css %}
-  #song-controls {
-    display: flex;
+<style type="text/css">
+  #controls {
+    display: none;
     justify-content: space-evenly;
     background-color: #ffffff;
+    z-index: 5;
     margin: 10px;
     position: -webkit-sticky;
     position: sticky;
     top: 0;
-    padding: 8px;
     box-shadow: 0 0 30px 1px #d8d8d8;
     -webkit-box-shadow: 0 0 30px 1px #d8d8d8;
     -moz-box-shadow: 0 0 30px 1px #d8d8d8;
-
+    font-size:0.9em;
   }
 
-  .song-controls-item {
+  .control-item {
+    font-size:15px;
+  }
+
+
+  .control-item ion-icon:hover {
+    color: #484848;
+  }
+
+  .control-item ion-icon {
+    font-size: 28px;
+    padding: 3px 0px 0px 0px;
+  }
+
+  .control-item span {
     display: inline-block;
-    padding: 3px;
-    text-align: center;
+    margin-bottom: 10px;
   }
 
-  .song-controls-item-label {
+  .control-item-label {
     display: block;
-    margin-bottom: 5px;
+    text-align: center;
+    font-size: 12px;
+    padding-top: 5px;
   }
 
-  #song-viewer {
+  #viewer {
     padding-left: 5px;
     padding-right: 5px;
     background: #ffffff;
     height: 100%;
     margin: auto 0;
+    min-height: 500px;
   }
 
-  #song-content {
-    margin: auto;
+  #viewer-content {
+    box-shadow: 0 0 30px 1px #d8d8d8;
+    -webkit-box-shadow: 0 0 30px 1px #d8d8d8;
+    -moz-box-shadow: 0 0 30px 1px #d8d8d8;
+    margin-top:60px;
+    min-height: 500px;
+    padding: 8px;
+    font-size:12px;
   }
 
-  #source-content {
-    margin: auto;
-    display: block;
+  #editor-content {
+    margin-top: 5px;
   }
 
   .chord {
     font-weight: bold;
   }
 
-  .chord-delimiter {
+  .delimiter {
     padding: 3px;
   }
+
+  #options {
+    display: inline-flex;
+    float: right;
+    width: 25%;
+  }
+
+  #options button {
+    padding: 2px;
+    margin: 2px;
+    width: 100%;
+  }
+
+  #options button:focus {
+    outline: none;
+  }
+
+  #options button:hover {
+    color: #484848;
+  }
+
+  #options button:active {
+    border: none;
+}
+</style>
 {% endblock extra_css %}
 {% block content %}
-  <div id="song-controls">
-      <div class="song-controls-item">
-        <div class="song-controls-item-label">transpose</div>
-        <button type="button" onclick="transpose('-')">-</button>
-        <span id="transpose-index">0</span>
-        <button type="button" onclick="transpose('+')">+</button>
-      </div>
-      <div class="song-controls-item">
-        <div class="song-controls-item-label">scroll</div>
-        <button type="button" onclick="toggle_scroll()">[>]</button>
-        <span id="scroll-speed">0</span>
-        <button type="button" onclick="stop_scroll()">[ ]</button>
-      </div>
-      <div class="song-controls-item">
-        <div class="song-controls-item-label">font</div>
-        <button type="button" onclick="adjust_font_size('-')">-</button>
-        <span id="font-size-index">0</span>
-        <button type="button" onclick="adjust_font_size('+')">+</button>
-      </div>
-      <div class="song-controls-item">
-        <div class="song-controls-item-label">edit</div>
-        <button type="button" onclick="toggle_form()">edit</button>
-      </div>
+  {% include "snippets/controls.html" %}
+  {% include "snippets/options.html" %}
+  <div id="viewer">
+    <div id="viewer-wrapper">
+      <textarea id="editor-content" rows="40" cols="108" style="white-space: pre-wrap;font-size: 18px;">{% include "snippets/instructions.txt" %}</textarea>
+      <div id="viewer-content" style="display: none;"></div>
     </div>
-    <form method="POST" action="/download">
-    <div class="song-controls-item">
-      <div class="song-controls-item-label">options</div>
-      <input type="submit" name="download" id="download" value="download" />
-      </div>
-    </form>
-  <div id="song-viewer">
-    <h1>{{ song_title }}</h1>
-    <textarea id="source-content" rows="30" cols="110" style="white-space: pre-wrap;"></textarea>
-    <div id="song-content" style="display: none;"></div>
   </div>
   <script>
-    const SONG_VIEWER = document.getElementById("song-viewer")
-    const SONG_CONTENT = document.getElementById("song-content")
-    const SOURCE_CONTENT = document.getElementById("source-content")
-    const SONG_VIEWER_TOP_POS = SONG_VIEWER.offsetTop
+    const VIEWER = document.getElementById("viewer")
+    const VIEWER_CONTENT = document.getElementById("viewer-content")
+    const EDITOR_CONTENT = document.getElementById("editor-content")
+    const CONTROLS = document.getElementById("controls")
+    // TODO: This shouldn't be necessary.
+    const DOWNLOAD_CONTENT = document.getElementById("download-content")
+    
 
-    const FONT_SIZE_MAX = 35
-    const FONT_SIZE_MIN = 5
-    const FONT_SIZE_DEFAULT = 15
-    const FONT_SIZE_STEP = 5
+    const FONT_SIZE_MAX = 36
+    const FONT_SIZE_MIN = 6
+    const FONT_SIZE_DEFAULT = 12
+    const FONT_SIZE_STEP = 6
+
     const TRANSPOSE_LIMIT = 11
     const TRANSPOSE_STEP = 1
+
+    const SCROLL_TOP_POS = VIEWER.offsetTop
     const SCROLL_SPEED_MAX = 20
     const SCROLL_SPEED_INTERVAL = 100
+    const SCROLL_START_BTN = document.getElementById("scroll-start-btn")
+    const SCROLL_PAUSE_BTN = document.getElementById("scroll-pause-btn")
+    
+    const FORM_LOCK_BTN = document.getElementById("lock-btn")
+    const FORM_UNLOCK_BTN = document.getElementById("unlock-btn")
+    const FORM_LOCK_TXT = document.getElementById("lock-txt")
 
     var font_size_index = 0
     var transpose_index = 0
     var scroll_speed = 1
     var scroll_interval = null
     var scroll_paused = false
-    var edit_mode = false
+    var form_locked = false
 
     function toggle_scroll() {
-      if (scroll_interval !== null) {
-        if (scroll_paused) {
-          scroll_paused = false
+      if(form_locked) {
+        if (scroll_interval !== null) {
+          if (scroll_paused) {
+            SCROLL_START_BTN.style.display = "none"
+            SCROLL_PAUSE_BTN.style.display = ""
+            scroll_paused = false
+          }
+          else {
+            SCROLL_START_BTN.style.display = ""
+            SCROLL_PAUSE_BTN.style.display = "none"
+            scroll_paused = true
+          }
         }
         else {
-          scroll_paused = true
+          document.getElementById("scroll-speed").innerHTML = 1
+          VIEWER.scrollTop = SCROLL_TOP_POS - VIEWER_CONTENT.offsetTop
+          var limit = VIEWER_CONTENT.getBoundingClientRect().height
+          scroll_interval = setInterval(function() {
+            if (!scroll_paused) {
+              console.log(scroll_speed)
+              window.scrollBy({
+                      top: scroll_speed,
+                      left: 0,
+                      behavior : "smooth"
+                  });
+            }
+          }, SCROLL_SPEED_INTERVAL)
+          scroll_paused = false
+          SCROLL_START_BTN.style.display = "none"
+          SCROLL_PAUSE_BTN.style.display = ""
+
         }
-      }
-      else {
-        document.getElementById("scroll-speed").innerHTML = 1
-        SONG_VIEWER.scrollTop = SONG_VIEWER_TOP_POS - SONG_CONTENT.offsetTop
-        var limit = SONG_CONTENT.getBoundingClientRect().height
-        scroll_interval = setInterval(function() {
-          if (scroll_paused) {
-            window.scrollBy({
-                    top: scroll_speed,
-                    left: 0,
-                    behavior : "smooth"
-                });
-          }
-        }, SCROLL_SPEED_INTERVAL)
-        scroll_paused = true
       }
     }
 
+    function clear_form() {
+      EDITOR_CONTENT.value = ""
+      VIEWER_CONTENT.innerHTML = ""
+    }
+
     async function toggle_form() {
-      if(!edit_mode) {
-        edit_mode = true
-        SOURCE_CONTENT.style.display = ""
-        SONG_CONTENT.style.display = "none"
+      if(form_locked) {
+        form_locked = false
+        EDITOR_CONTENT.style.display = ""
+        VIEWER_CONTENT.style.display = "none"
+        FORM_UNLOCK_BTN.style.display = ""
+        FORM_LOCK_BTN.style.display = "none"
+        FORM_LOCK_TXT.innerHTML = "lock"
+
+        stop_scroll()
+        transpose_index = 0
+        document.getElementById("transpose-index").innerHTML = transpose_index
+        CONTROLS.style.display = "none"
+
       } 
       else {
         response = await request("/parse", {
-          "content": SOURCE_CONTENT.value
+          "content": EDITOR_CONTENT.value
         })
-        edit_mode = false
-        SONG_CONTENT.style.display = ""
-        SOURCE_CONTENT.style.display = "none"
-        SONG_CONTENT.innerHTML = response.html_content
+        form_locked = true
+        EDITOR_CONTENT.style.display = "none"
+        VIEWER_CONTENT.style.display = ""
+        FORM_UNLOCK_BTN.style.display = "none"
+        FORM_LOCK_BTN.style.display = ""
+        FORM_LOCK_TXT.innerHTML = "unlock"
+        VIEWER_CONTENT.innerHTML = response.html_content
+        CONTROLS.style.display = "flex"
+
       }
+
     }
 
     function stop_scroll() {
       clearInterval(scroll_interval)
       scroll_paused = false
       scroll_interval = null
-      SONG_VIEWER.scrollTop = 0
+      VIEWER.scrollTop = 0
       document.getElementById("scroll-speed").innerHTML = 0
+      
     }
 
     function adjust_scroll_speed(operator) {
-      var step = operator === "-" ? -1 : 1
-      var next_scroll_speed = scroll_speed + step
-      if (next_scroll_speed > 0 && next_scroll_speed < SCROLL_SPEED_MAX) {
-        scroll_speed += step
-        document.getElementById("scroll-speed").innerHTML = scroll_speed
+      if(form_locked) {
+        var step = operator === "-" ? -1 : 1
+        var next_scroll_speed = scroll_speed + step
+        if (next_scroll_speed > 0 && next_scroll_speed < SCROLL_SPEED_MAX) {
+          scroll_speed += step
+          document.getElementById("scroll-speed").innerHTML = scroll_speed
+        }
       }
     }
 
     function adjust_font_size(operator) {
-      var step = operator === "-" ? -1 : 1
-      var step_px = step * FONT_SIZE_STEP
-      var new_font_size = parseInt(window.getComputedStyle(SONG_CONTENT, null).getPropertyValue("font-size")) + step_px
-      if (new_font_size >= FONT_SIZE_MAX || new_font_size < FONT_SIZE_MIN) {
-        new_font_size = FONT_SIZE_DEFAULT
-        font_size_index = 0
-      } 
-      else {
-        font_size_index += step
+      if(form_locked) {
+        var step = operator === "-" ? -1 : 1
+        var step_px = step * FONT_SIZE_STEP
+        var new_font_size = parseInt(window.getComputedStyle(VIEWER_CONTENT, null).getPropertyValue("font-size")) + step_px
+        if (new_font_size >= FONT_SIZE_MAX || new_font_size < FONT_SIZE_MIN) {
+          new_font_size = FONT_SIZE_DEFAULT
+          font_size_index = 0
+        } 
+        else {
+          font_size_index += step
+        }
+        VIEWER_CONTENT.style.fontSize = new_font_size.toString() + "px"
+        document.getElementById("font-size-index").innerHTML = font_size_index
       }
-      SONG_CONTENT.style.fontSize = new_font_size.toString() + "px"
-      document.getElementById("font-size-index").innerHTML = font_size_index
     }
 
     async function transpose(operator) {
@@ -195,10 +262,10 @@
         transpose_index = 0
       }
       response = await request("/transpose", {
-        "content": SOURCE_CONTENT.value,
+        "content": EDITOR_CONTENT.value,
         "degree": transpose_index
       })
-      SONG_CONTENT.innerHTML = response.html_content
+      VIEWER_CONTENT.innerHTML = response.html_content
       document.getElementById("transpose-index").innerHTML = transpose_index
     }
 
@@ -217,17 +284,25 @@
     }
 
     document.addEventListener("keydown", async (event) => {
-      if (event.code === "Space" && event.target !== SOURCE_CONTENT) {
+      if(event.target === EDITOR_CONTENT) {
+        DOWNLOAD_CONTENT.innerHTML = EDITOR_CONTENT.innerHTML
+      }
+      if (event.code === "Space" && event.target !== EDITOR_CONTENT) {
         event.preventDefault()
       }
-      if (scroll_interval !== null) {
-        if (event.code == "Escape" || event.code == "Space")
-          toggle_scroll()
-        if (event.code === "Equal")
-          adjust_scroll_speed("+")
-        if (event.code == "Minus")
-          adjust_scroll_speed("-")
-      }
+      if(form_locked) {
+        if(event.code == "Space") {
+            toggle_scroll()
+        }
+        else if (scroll_interval !== null) {
+          if (event.code == "Escape")
+            stop_scroll()
+          if (event.code === "Equal")
+            adjust_scroll_speed("+")
+          if (event.code == "Minus")
+            adjust_scroll_speed("-")
+          }
+        }
     })
   </script>
 {% endblock content %}

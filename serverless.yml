@@ -1,0 +1,31 @@
+service: guitarlette
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: ap-southeast-1
+  logs:
+    httpApi: true
+
+functions:
+  app:
+    handler: src.app.handler
+    events:
+      - httpApi: "*"
+
+package:
+  exclude:
+    - node_modules/**
+    - venv/**
+    - .direnv/**
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    slim: true
+    slimPatterns:
+      - '**/*.py[c|o]'
+      - '**/__pycache__*'
+
+plugins:
+  - serverless-python-requirements

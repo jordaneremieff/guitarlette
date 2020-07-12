@@ -1,0 +1,31 @@
+{% macro control_button(id, name, onclick=None, hidden=False, lockable=True) -%}
+  <ion-icon
+      class="control-icon {% if lockable %}lockable{% endif %}"
+      id="{{ id }}" 
+      name="{{ name }}" 
+      {% if hidden %}style="display:none;"{% endif %}
+      {% if onclick %}onclick="{{ onclick }}"{% endif %}></ion-icon>
+{%- endmacro %}
+
+<div id="controls">
+  <div class="control-item">
+    <div class="control-item-label">transpose</div>
+    {{ control_button("transpose-up-btn", "arrow-up-circle-sharp", onclick="transpose('+')") }}
+    <span id="transpose-index">0</span>
+    {{ control_button("tranpose-down-btn", "arrow-down-circle-sharp", onclick="transpose('-')") }}
+  </div>
+  <div class="control-item">
+    <div class="control-item-label">scroll</div>
+    {{ control_button("scroll-start-btn", "play-circle-sharp", onclick="toggle_scroll()") }}
+    {{ control_button("scroll-pause-btn", "pause-circle-sharp", onclick="toggle_scroll()", hidden=True) }}
+    <span id="scroll-speed">0</span>
+    {{ control_button("scroll-stop-btn", "stop-circle-sharp", onclick="stop_scroll()") }}
+  </div>
+  <div class="control-item">
+    <div class="control-item-label">font</div>
+    {{ control_button("font-add-btn", "add-circle-sharp", onclick="adjust_font_size('+')") }}
+    <span id="font-size-index">0</span>
+    {{ control_button("font-down-btn", "remove-circle-sharp", onclick="adjust_font_size('-')") }}
+  </div>
+</div>
+

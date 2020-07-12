@@ -14,7 +14,7 @@ class SongToken:
 
     def __post_init__(self) -> None:
         if self.content == "":
-            self.html_class = "chord-delimiter"
+            self.html_class = "delimiter"
         else:
             try:
                 self.chord = Chord(self.content.strip())

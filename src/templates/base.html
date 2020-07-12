@@ -3,6 +3,8 @@
 <head>
   <title>{% block title %}guitarlette{% endblock title %}</title>
   <link rel="shortcut icon" href="{{ url_for('static', path='favicon.ico') }}">
+  <script type="module" src="https://unpkg.com/ionicons@5.1.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule="" src="https://unpkg.com/ionicons@5.1.2/dist/ionicons/ionicons.js"></script>
   <style type="text/css">
       html,
   body {
@@ -22,10 +24,10 @@
   nav {
     padding: 10px;
     font-size: 1em;
-    margin-bottom: 5px;
+    margin-bottom: 20px;
   }
 
-  ul {
+  nav ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
@@ -33,35 +35,33 @@
     float: right;
   }
 
-  li {
+  nav li {
     float: left;
     margin-top: 3px;
     margin-left: 5px;
-
-  }
-
-  li a {
-    display: block;
-    border-radius: 1em;
-    background-color: #f0f0f0;
-    color: #000000;
+    display: inline-flex;
     text-align: center;
-    padding: 8px 12px;
-    text-decoration: none;
-    float: left
+    border: 1px solid #f0f0f0;
+    color: #000000;
+    padding: 5px 8px;
   }
 
-  li a:hover {
-    border-radius: 1em;
+  nav li a {
+    color: inherit;
+    text-decoration: none;
+    
+  }
+
+  nav li:hover {
     background-color: #d8d8d8;
   }
 
   #wrapper {
     padding: 10px;
     margin-top: 20px;
-    box-shadow: 0 0 20px 5px #d8d8d8;
-    -webkit-box-shadow: 0 0 20px 5px #d8d8d8;
-    -moz-box-shadow: 0 0 20px 5px #d8d8d8;
+    box-shadow: 0 0 10px 5px #d8d8d8;
+    -webkit-box-shadow: 0 0 10px 5px #d8d8d8;
+    -moz-box-shadow: 0 0 10px 5px #d8d8d8;
   }
 
   #nav-title {
@@ -69,7 +69,7 @@
     margin-left: 5px;
     font-size: 20px;
   }
-
+  </style>
 
   {% block extra_css %}
   {% endblock extra_css %}

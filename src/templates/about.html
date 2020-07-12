@@ -1,5 +1,21 @@
 {% extends "base.html" %}
 {% block title %}about{% endblock title %}
 {% block content %}
-.
+<div style="height: 500px">
+
+    <h3>about</h3>
+
+    This is still somewhat of a <strong>*work in progress*</strong>. There are a few features I want to implement yet, and the frontend UI needs some improvements.
+
+    <br><br>You can view the source code on <a href="https://github.com/jordaneremieff/guitarlette">GitHub</a>.
+    <br><br>
+
+    <h3>tools</h3>
+
+    This project was built using <a href="https://fastapi.tiangolo.com/">FastAPI</a> (and <a href="https://www.starlette.io/">Starlette</a>) for the API, <a href="https://jinja.palletsprojects.com/en/">Jinja2</a> templates, <a href="https://github.com/yuma-m/pychord">PyChord</a>, <a href="https://ionicons.com/">Ionicon</a> icons, and vanilla Javascript/CSS.
+
+    <br><br>
+    It is hosted with AWS Lambda & API gateway using another project of mine, <a href="https://mangum.io/">Mangum</a>.
+</div>
+
 {% endblock content %}
