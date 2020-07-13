@@ -138,28 +138,28 @@
   <div id="controls">
     <div class="control-item">
       <div class="control-item-label">transpose</div>
-      {{ icon_button("transpose-up-btn", "arrow-up-circle-sharp", onclick="transpose('+')") }}
+      {{ icon_button("transpose-decrease-btn", "arrow-down-circle-sharp") }}
       <span id="transpose-index">0</span>
-      {{ icon_button("tranpose-down-btn", "arrow-down-circle-sharp", onclick="transpose('-')") }}
+      {{ icon_button("transpose-increase-btn", "arrow-up-circle-sharp") }}
     </div>
     <div class="control-item">
       <div class="control-item-label">scroll</div>
-      {{ icon_button("scroll-start-btn", "play-circle-sharp", onclick="toggle_scroll()") }}
-      {{ icon_button("scroll-pause-btn", "pause-circle-sharp", onclick="toggle_scroll()", hidden=True) }}
+      {{ icon_button("play-btn", "play-circle-sharp") }}
+      {{ icon_button("pause-btn", "pause-circle-sharp", hidden=True) }}
       <span id="scroll-speed">0</span>
-      {{ icon_button("scroll-stop-btn", "stop-circle-sharp", onclick="stop_scroll()") }}
+      {{ icon_button("stop-btn", "stop-circle-sharp") }}
     </div>
     <div class="control-item">
       <div class="control-item-label">font</div>
-      {{ icon_button("font-add-btn", "add-circle-sharp", onclick="adjust_font_size('+')") }}
+      {{ icon_button("font-decrease-btn", "remove-circle-sharp") }}
       <span id="font-size-index">0</span>
-      {{ icon_button("font-down-btn", "remove-circle-sharp", onclick="adjust_font_size('-')") }}
+      {{ icon_button("font-increase-btn", "add-circle-sharp") }}
     </div>
   </div>
   <div id="song-form">
     <form method="POST" action="/download">
       <div id="options">
-        <button type="button" id="lock" name="lock" onclick="toggle_form()">
+        <button type="button" id="lock" name="lock">
         {{ icon_button("unlock-btn", "lock-open-sharp") }}
         {{ icon_button("lock-btn", "lock-closed-sharp", hidden=True) }}
         <br><span id="lock-txt">lock</span>
@@ -168,7 +168,7 @@
         {{ icon_button("download-btn", "cloud-download-sharp") }}
         <br>download
         </button>
-        <button type="button" id="clear" name="clear" onclick="clear_form()">
+        <button type="button" id="clear" name="clear">
         {{ icon_button("clear-btn", "trash-sharp") }}
         <br>clear
         </button>
@@ -181,155 +181,218 @@
     <div id="song-html" style="display: none;"></div>
   </div>
   <script>
-    const SONG_DISPLAY = document.getElementById("song-display")
-    const SONG_HTML = document.getElementById("song-html")
-    const SONG_TXT = document.getElementById("song-txt")
+    class Scroll {
+      constructor() {
+        this.is_paused = false
+        this.speed = 1
+        this.interval = null
+        this.play_btn = document.getElementById("play-btn")
+        this.pause_btn = document.getElementById("pause-btn")
+        this.stop_btn = document.getElementById("stop-btn")
+      }
 
-    const FONT_SIZE_MAX = 36
-    const FONT_SIZE_MIN = 6
-    const FONT_SIZE_DEFAULT = 12
-    const FONT_SIZE_STEP = 6
-
-    const TRANSPOSE_LIMIT = 11
-    const TRANSPOSE_STEP = 1
-
-    const SCROLL_TOP_POS = SONG_DISPLAY.offsetTop
-    const SCROLL_SPEED_MAX = 20
-    const SCROLL_SPEED_INTERVAL = 100
-    const SCROLL_START_BTN = document.getElementById("scroll-start-btn")
-    const SCROLL_PAUSE_BTN = document.getElementById("scroll-pause-btn")
-    
-    const FORM_LOCK_BTN = document.getElementById("lock-btn")
-    const FORM_UNLOCK_BTN = document.getElementById("unlock-btn")
-    const FORM_LOCK_TXT = document.getElementById("lock-txt")
-
-    var font_size_index = 0
-    var transpose_index = 0
-    var scroll_speed = 1
-    var scroll_interval = null
-    var scroll_paused = false
-    var form_locked = false
-
-    function toggle_scroll() {
-      if(form_locked) {
-        if (scroll_interval !== null) {
-          if (scroll_paused) {
-            SCROLL_START_BTN.style.display = "none"
-            SCROLL_PAUSE_BTN.style.display = ""
-            scroll_paused = false
-          }
-          else {
-            SCROLL_START_BTN.style.display = ""
-            SCROLL_PAUSE_BTN.style.display = "none"
-            scroll_paused = true
-          }
+      execute(method) {
+        if(composer.is_locked) {
+          this[method]();
         }
-        else {
+      }
+
+      toggle() {
+        if(this.is_paused || this.interval === null)
+          this.execute("play")
+        else
+          this.execute("pause")
+      }
+
+      play() {
+        this.is_paused = false
+        this.play_btn.style.display = "none"
+        this.pause_btn.style.display = ""
+        if (this.interval === null) {
           document.getElementById("scroll-speed").innerHTML = 1
-          SONG_DISPLAY.scrollTop = SCROLL_TOP_POS - SONG_HTML.offsetTop
-          var limit = SONG_HTML.getBoundingClientRect().height
-          scroll_interval = setInterval(function() {
-            if (!scroll_paused) {
-              console.log(scroll_speed)
+          var t = this;
+          this.interval = setInterval(function() {
+            if (!t.is_paused) {
               window.scrollBy({
-                      top: scroll_speed,
+                      top: t.speed,
                       left: 0,
                       behavior : "smooth"
                   });
             }
-          }, SCROLL_SPEED_INTERVAL)
-          scroll_paused = false
-          SCROLL_START_BTN.style.display = "none"
-          SCROLL_PAUSE_BTN.style.display = ""
-
+          }, 100)
         }
+      }
+
+      pause() {
+        this.play_btn.style.display = ""
+        this.pause_btn.style.display = "none"
+        this.is_paused = true
+
+      }
+
+      stop() {
+        clearInterval(this.interval)
+        this.is_paused = false
+        this.interval = null
+        this.play_btn.style.display = ""
+        this.pause_btn.style.display = "none"
+        document.getElementById("scroll-speed").innerHTML = 0
+      }
+
+      increase() {
+        if(!(this.speed + 1 > 20))
+          this.speed += 1
+          document.getElementById("scroll-speed").innerHTML = this.speed
+      }
+
+      decrease() {
+        if((this.speed - 1 > 0))
+          this.speed -= 1
+        else
+          this.speed = 0
+          document.getElementById("scroll-speed").innerHTML = this.speed
+          this.is_paused = true
       }
     }
 
-    function clear_form() {
-      SONG_TXT.value = ""
-      SONG_HTML.innerHTML = ""
+    class Font {
+      constructor() {
+        this.size = 18
+        this.index = 0
+        this.step = 3
+      }
+
+      update_html() {
+        document.getElementById("song-html").style.fontSize = this.size.toString() + "px"
+        document.getElementById("font-size-index").innerHTML = this.index
+      }
+
+      execute(method) {
+        if(composer.is_locked) {
+          this[method]();
+        }
+      }
+
+      increase() {
+        if(this.size + this.step >= 36) {
+          this.size = 18
+          this.index = 0
+        }
+        else {
+          this.size += this.step
+          this.index += 1
+        }
+        this.update_html()
+
+      }
+
+      decrease() {
+        if(this.size - this.step <= 0) {
+          this.size = 18
+          this.index = 0
+        }
+        else {
+          this.size -= this.step
+          this.index -= 1
+        }
+        this.update_html()
+      }
     }
 
-    async function toggle_form() {
-      if(form_locked) {
-        form_locked = false
-        SONG_TXT.style.display = ""
-        SONG_HTML.style.display = "none"
-        FORM_UNLOCK_BTN.style.display = ""
-        FORM_LOCK_BTN.style.display = "none"
-        FORM_LOCK_TXT.innerHTML = "lock"
+    class Transpose {
+      constructor() {
+        this.index = 0
+      }
 
-        stop_scroll()
-        transpose_index = 0
-        document.getElementById("transpose-index").innerHTML = transpose_index
-      } 
-      else {
-        response = await request("/parse", {
-          "content": SONG_TXT.value
+      async update_html() {
+        let response = await request("/transpose", {
+          "content": document.getElementById("song-txt").value,
+          "degree": this.index
         })
-        form_locked = true
-        SONG_TXT.style.display = "none"
-        SONG_HTML.style.display = ""
-        FORM_UNLOCK_BTN.style.display = "none"
-        FORM_LOCK_BTN.style.display = ""
-        FORM_LOCK_TXT.innerHTML = "unlock"
-        SONG_HTML.innerHTML = response.html_content
+        document.getElementById("song-html").innerHTML = response.html_content
+        document.getElementById("transpose-index").innerHTML = this.index
+
       }
-    }
 
-    function stop_scroll() {
-      clearInterval(scroll_interval)
-      scroll_paused = false
-      scroll_interval = null
-      SONG_DISPLAY.scrollTop = 0
-      document.getElementById("scroll-speed").innerHTML = 0
-      
-    }
-
-    function adjust_scroll_speed(operator) {
-      if(form_locked) {
-        var step = operator === "-" ? -1 : 1
-        var next_scroll_speed = scroll_speed + step
-        if (next_scroll_speed > 0 && next_scroll_speed < SCROLL_SPEED_MAX) {
-          scroll_speed += step
-          document.getElementById("scroll-speed").innerHTML = scroll_speed
+      execute(method) {
+        if(composer.is_locked) {
+          this[method]();
         }
       }
+
+      async increase() {
+        if(this.index + 1 === 11) {
+          this.index = 0
+        }
+        else {
+          this.index += 1
+        }
+        await this.update_html()
+      }
+
+      async decrease() {
+        if(this.index - 1 === -11) {
+          this.index = 0
+        }
+        else {
+          this.index -= 1
+        }
+        await this.update_html()
+      }
     }
 
-    function adjust_font_size(operator) {
-      if(form_locked) {
-        var step = operator === "-" ? -1 : 1
-        var step_px = step * FONT_SIZE_STEP
-        var new_font_size = parseInt(window.getComputedStyle(SONG_HTML, null).getPropertyValue("font-size")) + step_px
-        if (new_font_size >= FONT_SIZE_MAX || new_font_size <= FONT_SIZE_MIN) {
-          new_font_size = FONT_SIZE_DEFAULT
-          font_size_index = 0
+    class Composer {
+      constructor() {
+        this.is_locked = false
+        this.song_txt = document.getElementById("song-txt")
+        this.song_html = document.getElementById("song-html")
+        this.lock_btn = document.getElementById("lock-btn")
+        this.unlock_btn = document.getElementById("unlock-btn")
+        this.lock_txt = document.getElementById("lock-txt")
+        this.scroll = new Scroll()
+        this.font = new Font()
+        this.transpose = new Transpose()
+      }
+
+      async toggle() {
+        if(this.is_locked) {
+          this.unlock()
         } 
         else {
-          font_size_index += step
+          await this.lock()
         }
-        SONG_HTML.style.fontSize = new_font_size.toString() + "px"
-        document.getElementById("font-size-index").innerHTML = font_size_index
       }
-    }
 
-    async function transpose(operator) {
-      var step = operator === "-" ? -1 : 1
-      var limit = (TRANSPOSE_LIMIT + 1) * step
-      if (transpose_index + step != (TRANSPOSE_LIMIT + 1) * step) {
-        transpose_index += step
+      async lock() {
+        let response = await request("/parse", {
+          "content": this.song_txt.value
+        })
+        this.is_locked = true
+        this.song_txt.style.display = "none"
+        this.song_html.style.display = ""
+        this.song_html.innerHTML = response.html_content
+        this.unlock_btn.style.display = "none"
+        this.lock_btn.style.display = ""
+        this.lock_txt.innerHTML = "unlock"
       }
-      else {
-        transpose_index = 0
+
+      unlock() {
+        this.is_locked = false
+        this.song_txt.style.display = ""
+        this.song_html.style.display = "none"
+        this.unlock_btn.style.display = ""
+        this.lock_btn.style.display = "none"
+        this.lock_txt.innerHTML = "lock"
+
+        this.scroll.stop()
+        this.transpose.index = 0
+        document.getElementById("transpose-index").innerHTML = this.transpose.index
       }
-      response = await request("/transpose", {
-        "content": SONG_TXT.value,
-        "degree": transpose_index
-      })
-      SONG_HTML.innerHTML = response.html_content
-      document.getElementById("transpose-index").innerHTML = transpose_index
+
+      clear() {
+        this.song_txt.value = ""
+        this.song_html.innerHTML = ""
+      }
     }
 
     async function request(endpoint, json_body) {
@@ -346,26 +409,65 @@
       return json
     }
 
+
+    const composer = new Composer()
+    const play_btn = document.getElementById("play-btn")
+    const pause_btn = document.getElementById("pause-btn")
+    const stop_btn = document.getElementById("stop-btn")
+    const font_increase_btn = document.getElementById("font-increase-btn")
+    const font_decrease_btn = document.getElementById("font-decrease-btn")
+    const transpose_increase_btn = document.getElementById("transpose-increase-btn")
+    const transpose_decrease_btn = document.getElementById("transpose-decrease-btn")
+    const clear = document.getElementById("clear")
+    const lock = document.getElementById("lock")
+
+    play_btn.addEventListener("click", function(event) {
+      composer.scroll.execute("play")
+    }, false)
+
+    pause_btn.addEventListener("click", function(event) {
+      composer.scroll.execute("pause")
+    }, false)
+
+    stop_btn.addEventListener("click", function(event) {
+      composer.scroll.execute("stop")
+    }, false)
+
+    font_increase_btn.addEventListener("click", function(event) {
+      composer.font.execute("increase")
+    }, false)
+
+    font_decrease_btn.addEventListener("click", function(event) {
+      composer.font.execute("decrease")
+    }, false)
+
+    transpose_increase_btn.addEventListener("click", async function(event) {
+      composer.transpose.execute("increase")
+    }, false)
+
+    transpose_decrease_btn.addEventListener("click", async function(event) {
+      composer.transpose.execute("decrease")
+    }, false)
+
+    clear.addEventListener("click", function(event) {
+      composer.clear()
+    }, false)
+
+    lock.addEventListener("click", async function(event) {
+      composer.toggle()
+    }, false)
+
     document.addEventListener("keydown", async (event) => {
-      if(event.target === SONG_TXT) {
-        DOWNLOAD_CONTENT.innerHTML = SONG_TXT.innerHTML
-      }
-      if (event.code === "Space" && event.target !== SONG_TXT) {
+      if (event.code === "Space" && event.target !== composer.song_txt)
         event.preventDefault()
-      }
-      if(form_locked) {
-        if(event.code == "Space") {
-            toggle_scroll()
-        }
-        else if (scroll_interval !== null) {
-          if (event.code == "Escape")
-            stop_scroll()
-          if (event.code === "Equal")
-            adjust_scroll_speed("+")
-          if (event.code == "Minus")
-            adjust_scroll_speed("-")
-          }
-        }
-    })
+      if(event.code == "Space")
+        composer.scroll.toggle()
+      if(event.code == "Escape")
+        composer.scroll.stop()
+      if(event.code === "Equal")
+        composer.scroll.increase()
+      if(event.code == "Minus")
+        composer.scroll.decrease()
+      })
   </script>
 {% endblock body %}
