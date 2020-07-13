@@ -8,12 +8,12 @@ from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-from .parser import SongParser
+from .song import Song
 
 
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 
-app = FastAPI()
+app = FastAPI(debug=True)
 app.mount(
     "/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static"
 )
@@ -31,15 +31,14 @@ def about(request: Request):
 
 @app.post("/parse")
 def parse(content: str = Body(..., embed=True)):
-    parser = SongParser(content)
+    parser = Song(content)
     return {"html_content": parser.html}
 
 
 @app.post("/transpose")
 def transpose(content: str = Body(...), degree: int = Body(...)):
-    parser = SongParser(content)
-    parser.transpose(degree)
-    return {"content": parser.content, "html_content": parser.html}
+    parser = Song(content, degree=degree)
+    return {"content": parser.txt, "html_content": parser.html}
 
 
 @app.post("/download")
@@ -53,3 +52,8 @@ def download(request: Request, download_content: str = Form(...)):
 
 
 handler = Mangum(app, lifespan="off")
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, debug=True)

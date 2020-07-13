@@ -245,7 +245,7 @@
         var step = operator === "-" ? -1 : 1
         var step_px = step * FONT_SIZE_STEP
         var new_font_size = parseInt(window.getComputedStyle(VIEWER_CONTENT, null).getPropertyValue("font-size")) + step_px
-        if (new_font_size >= FONT_SIZE_MAX || new_font_size < FONT_SIZE_MIN) {
+        if (new_font_size >= FONT_SIZE_MAX || new_font_size <= FONT_SIZE_MIN) {
           new_font_size = FONT_SIZE_DEFAULT
           font_size_index = 0
         } 
