@@ -54,6 +54,5 @@ class Song:
 
             html_row = f"<div class='row'>{' '.join(html_values)}</div>"
             txt_row = " ".join(txt_values)
-
             self.html_rows.append(html_row)
             self.txt_rows.append(txt_row)

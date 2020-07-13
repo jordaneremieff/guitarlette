@@ -3,7 +3,7 @@
 {% block extra_css %}
 <style type="text/css">
   #controls {
-    display: none;
+    display: flex;
     justify-content: space-evenly;
     background-color: #ffffff;
     z-index: 5;
@@ -17,10 +17,26 @@
     font-size:0.9em;
   }
 
+  #controls div {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  #controls div::-moz-selection {
+    background:transparent;
+  }
+
+  #controls div::selection {
+    background:transparent;
+  }
+
   .control-item {
     font-size:15px;
   }
-
 
   .control-item ion-icon:hover {
     color: #484848;
@@ -43,7 +59,7 @@
     padding-top: 5px;
   }
 
-  #viewer {
+  #song {
     padding-left: 5px;
     padding-right: 5px;
     background: #ffffff;
@@ -52,7 +68,7 @@
     min-height: 500px;
   }
 
-  #viewer-content {
+  #song-html {
     box-shadow: 0 0 30px 1px #d8d8d8;
     -webkit-box-shadow: 0 0 30px 1px #d8d8d8;
     -moz-box-shadow: 0 0 30px 1px #d8d8d8;
@@ -62,7 +78,7 @@
     font-size:12px;
   }
 
-  #editor-content {
+  #song-txt {
     margin-top: 70px;
   }
 
@@ -73,6 +89,10 @@
   .delimiter {
     padding: 3px;
   }
+
+/*  .lyric {
+    color: red;
+  }*/
 
   #options {
     display: inline-flex;
@@ -104,23 +124,66 @@
 
 </style>
 {% endblock extra_css %}
-{% block content %}
-  {% include "snippets/controls.html" %}
-  {% include "snippets/options.html" %}
-  <div id="viewer">
-    <div id="viewer-wrapper">
-      <textarea id="editor-content" rows="40" cols="108" style="white-space: pre-wrap;">{% include "snippets/instructions.txt" %}</textarea>
-      <div id="viewer-content" style="display: none;"></div>
+
+{% macro icon_button(id, name, size="small", onclick=None, hidden=False) -%}
+<ion-icon 
+    id="{{ id }}"
+    name="{{ name }}"
+    size="{{ size }}"
+    {% if hidden %}style="display:none;"{% endif %}
+    {% if onclick %}onclick="{{ onclick }}"{% endif %}></ion-icon>
+{%- endmacro %}
+
+{% block body %}
+  <div id="controls">
+    <div class="control-item">
+      <div class="control-item-label">transpose</div>
+      {{ icon_button("transpose-up-btn", "arrow-up-circle-sharp", onclick="transpose('+')") }}
+      <span id="transpose-index">0</span>
+      {{ icon_button("tranpose-down-btn", "arrow-down-circle-sharp", onclick="transpose('-')") }}
+    </div>
+    <div class="control-item">
+      <div class="control-item-label">scroll</div>
+      {{ icon_button("scroll-start-btn", "play-circle-sharp", onclick="toggle_scroll()") }}
+      {{ icon_button("scroll-pause-btn", "pause-circle-sharp", onclick="toggle_scroll()", hidden=True) }}
+      <span id="scroll-speed">0</span>
+      {{ icon_button("scroll-stop-btn", "stop-circle-sharp", onclick="stop_scroll()") }}
+    </div>
+    <div class="control-item">
+      <div class="control-item-label">font</div>
+      {{ icon_button("font-add-btn", "add-circle-sharp", onclick="adjust_font_size('+')") }}
+      <span id="font-size-index">0</span>
+      {{ icon_button("font-down-btn", "remove-circle-sharp", onclick="adjust_font_size('-')") }}
     </div>
   </div>
+  <div id="song-form">
+    <form method="POST" action="/download">
+      <div id="options">
+        <button type="button" id="lock" name="lock" onclick="toggle_form()">
+        {{ icon_button("unlock-btn", "lock-open-sharp") }}
+        {{ icon_button("lock-btn", "lock-closed-sharp", hidden=True) }}
+        <br><span id="lock-txt">lock</span>
+        </button>
+        <button type="submit" id="download" name="download">
+        {{ icon_button("download-btn", "cloud-download-sharp") }}
+        <br>download
+        </button>
+        <button type="button" id="clear" name="clear" onclick="clear_form()">
+        {{ icon_button("clear-btn", "trash-sharp") }}
+        <br>clear
+        </button>
+      </div>
+      <textarea id="song-txt" name="song_txt" rows="40" cols="108" style="white-space: pre-wrap;">{% include "instructions.txt" %}
+        </textarea>
+      </form>
+  </div>
+  <div id="song-display">
+    <div id="song-html" style="display: none;"></div>
+  </div>
   <script>
-    const VIEWER = document.getElementById("viewer")
-    const VIEWER_CONTENT = document.getElementById("viewer-content")
-    const EDITOR_CONTENT = document.getElementById("editor-content")
-    const CONTROLS = document.getElementById("controls")
-    // TODO: This shouldn't be necessary.
-    const DOWNLOAD_CONTENT = document.getElementById("download-content")
-    
+    const SONG_DISPLAY = document.getElementById("song-display")
+    const SONG_HTML = document.getElementById("song-html")
+    const SONG_TXT = document.getElementById("song-txt")
 
     const FONT_SIZE_MAX = 36
     const FONT_SIZE_MIN = 6
@@ -130,7 +193,7 @@
     const TRANSPOSE_LIMIT = 11
     const TRANSPOSE_STEP = 1
 
-    const SCROLL_TOP_POS = VIEWER.offsetTop
+    const SCROLL_TOP_POS = SONG_DISPLAY.offsetTop
     const SCROLL_SPEED_MAX = 20
     const SCROLL_SPEED_INTERVAL = 100
     const SCROLL_START_BTN = document.getElementById("scroll-start-btn")
@@ -163,8 +226,8 @@
         }
         else {
           document.getElementById("scroll-speed").innerHTML = 1
-          VIEWER.scrollTop = SCROLL_TOP_POS - VIEWER_CONTENT.offsetTop
-          var limit = VIEWER_CONTENT.getBoundingClientRect().height
+          SONG_DISPLAY.scrollTop = SCROLL_TOP_POS - SONG_HTML.offsetTop
+          var limit = SONG_HTML.getBoundingClientRect().height
           scroll_interval = setInterval(function() {
             if (!scroll_paused) {
               console.log(scroll_speed)
@@ -184,15 +247,15 @@
     }
 
     function clear_form() {
-      EDITOR_CONTENT.value = ""
-      VIEWER_CONTENT.innerHTML = ""
+      SONG_TXT.value = ""
+      SONG_HTML.innerHTML = ""
     }
 
     async function toggle_form() {
       if(form_locked) {
         form_locked = false
-        EDITOR_CONTENT.style.display = ""
-        VIEWER_CONTENT.style.display = "none"
+        SONG_TXT.style.display = ""
+        SONG_HTML.style.display = "none"
         FORM_UNLOCK_BTN.style.display = ""
         FORM_LOCK_BTN.style.display = "none"
         FORM_LOCK_TXT.innerHTML = "lock"
@@ -200,31 +263,26 @@
         stop_scroll()
         transpose_index = 0
         document.getElementById("transpose-index").innerHTML = transpose_index
-        CONTROLS.style.display = "none"
-
       } 
       else {
         response = await request("/parse", {
-          "content": EDITOR_CONTENT.value
+          "content": SONG_TXT.value
         })
         form_locked = true
-        EDITOR_CONTENT.style.display = "none"
-        VIEWER_CONTENT.style.display = ""
+        SONG_TXT.style.display = "none"
+        SONG_HTML.style.display = ""
         FORM_UNLOCK_BTN.style.display = "none"
         FORM_LOCK_BTN.style.display = ""
         FORM_LOCK_TXT.innerHTML = "unlock"
-        VIEWER_CONTENT.innerHTML = response.html_content
-        CONTROLS.style.display = "flex"
-
+        SONG_HTML.innerHTML = response.html_content
       }
-
     }
 
     function stop_scroll() {
       clearInterval(scroll_interval)
       scroll_paused = false
       scroll_interval = null
-      VIEWER.scrollTop = 0
+      SONG_DISPLAY.scrollTop = 0
       document.getElementById("scroll-speed").innerHTML = 0
       
     }
@@ -244,7 +302,7 @@
       if(form_locked) {
         var step = operator === "-" ? -1 : 1
         var step_px = step * FONT_SIZE_STEP
-        var new_font_size = parseInt(window.getComputedStyle(VIEWER_CONTENT, null).getPropertyValue("font-size")) + step_px
+        var new_font_size = parseInt(window.getComputedStyle(SONG_HTML, null).getPropertyValue("font-size")) + step_px
         if (new_font_size >= FONT_SIZE_MAX || new_font_size <= FONT_SIZE_MIN) {
           new_font_size = FONT_SIZE_DEFAULT
           font_size_index = 0
@@ -252,7 +310,7 @@
         else {
           font_size_index += step
         }
-        VIEWER_CONTENT.style.fontSize = new_font_size.toString() + "px"
+        SONG_HTML.style.fontSize = new_font_size.toString() + "px"
         document.getElementById("font-size-index").innerHTML = font_size_index
       }
     }
@@ -267,10 +325,10 @@
         transpose_index = 0
       }
       response = await request("/transpose", {
-        "content": EDITOR_CONTENT.value,
+        "content": SONG_TXT.value,
         "degree": transpose_index
       })
-      VIEWER_CONTENT.innerHTML = response.html_content
+      SONG_HTML.innerHTML = response.html_content
       document.getElementById("transpose-index").innerHTML = transpose_index
     }
 
@@ -289,10 +347,10 @@
     }
 
     document.addEventListener("keydown", async (event) => {
-      if(event.target === EDITOR_CONTENT) {
-        DOWNLOAD_CONTENT.innerHTML = EDITOR_CONTENT.innerHTML
+      if(event.target === SONG_TXT) {
+        DOWNLOAD_CONTENT.innerHTML = SONG_TXT.innerHTML
       }
-      if (event.code === "Space" && event.target !== EDITOR_CONTENT) {
+      if (event.code === "Space" && event.target !== SONG_TXT) {
         event.preventDefault()
       }
       if(form_locked) {
@@ -310,4 +368,4 @@
         }
     })
   </script>
-{% endblock content %}
+{% endblock body %}
