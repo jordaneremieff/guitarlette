@@ -209,6 +209,7 @@
         this.play_btn.style.display = "none"
         this.pause_btn.style.display = ""
         if (this.interval === null) {
+          this.speed = 1
           document.getElementById("scroll-speed").innerHTML = 1
           var t = this;
           this.interval = setInterval(function() {
@@ -232,6 +233,7 @@
 
       stop() {
         clearInterval(this.interval)
+        this.speed = 0
         this.is_paused = false
         this.interval = null
         this.play_btn.style.display = ""
@@ -246,12 +248,13 @@
       }
 
       decrease() {
-        if((this.speed - 1 > 0))
+        if(this.speed - 1 > 0) {
           this.speed -= 1
-        else
-          this.speed = 0
           document.getElementById("scroll-speed").innerHTML = this.speed
-          this.is_paused = true
+        }
+        else {
+          this.stop()
+        }
       }
     }
 

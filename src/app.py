@@ -13,7 +13,7 @@ from .song import Song
 
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 
-app = FastAPI(debug=True)
+app = FastAPI()
 app.mount(
     "/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static"
 )
