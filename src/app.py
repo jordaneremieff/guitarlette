@@ -42,10 +42,10 @@ def transpose(content: str = Body(...), degree: int = Body(...)):
 
 
 @app.post("/download")
-def download(request: Request, song_txt: str = Form(...)):
+def download(request: Request, content: str = Form(...)):
     filename = f"guitarlette-{datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}.txt"
     return StreamingResponse(
-        BytesIO(song_txt.encode()),
+        BytesIO(content.encode()),
         headers={"Content-Disposition": f"attachment; filename={filename}"},
         media_type="text/plain",
     )
@@ -53,7 +53,7 @@ def download(request: Request, song_txt: str = Form(...)):
 
 handler = Mangum(app, lifespan="off")
 
-if __name__ == "__main__":
-    import uvicorn
+# if __name__ == "__main__":
+#     import uvicorn
 
-    uvicorn.run(app, debug=True)
+#     uvicorn.run(app, debug=True)

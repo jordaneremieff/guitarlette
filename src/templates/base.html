@@ -5,12 +5,8 @@
   <link rel="shortcut icon" href="{{ url_for('static', path='favicon.ico') }}">
   <script type="module" src="https://unpkg.com/ionicons@5.1.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule="" src="https://unpkg.com/ionicons@5.1.2/dist/ionicons/ionicons.js"></script>
+  <meta name="viewport" content="initial-scale=1.0, width=device-width">
   <style type="text/css">
-      html,
-  body {
-    height: 100%;
-  }
-
   html {
     display: table;
     margin: auto;
@@ -18,14 +14,15 @@
 
   body {
     font-family: "Roboto", sans-serif;
-    width: 700px;
-    outline-style:none;
+    outline-style: none;
+    display: flex;
+    justify-content: center;
+    
   }
 
   nav {
-    padding: 10px;
-    font-size: 1em;
-    margin-bottom: 20px;
+    margin: 5px;
+    padding: 5px
   }
 
   nav ul {
@@ -58,17 +55,18 @@
   }
 
   #wrapper {
-    padding: 10px;
-    margin-top: 20px;
+    margin-top: 7px;
     box-shadow: 0 0 10px 5px #d8d8d8;
     -webkit-box-shadow: 0 0 10px 5px #d8d8d8;
     -moz-box-shadow: 0 0 10px 5px #d8d8d8;
+    border: 1px solid purple;
+    width: calc(8em + 70vmin);
+    max-width: calc(8em + 70vmin);
   }
 
   #nav-title {
     margin-top: 3px;
     margin-left: 5px;
-    font-size: 20px;
     color: #000000;
     text-decoration: none;
   }

@@ -14,7 +14,6 @@
     box-shadow: 0 0 30px 1px #d8d8d8;
     -webkit-box-shadow: 0 0 30px 1px #d8d8d8;
     -moz-box-shadow: 0 0 30px 1px #d8d8d8;
-    font-size:0.9em;
   }
 
   #controls div {
@@ -27,15 +26,21 @@
   }
 
   #controls div::-moz-selection {
-    background:transparent;
+    background: transparent;
   }
 
   #controls div::selection {
-    background:transparent;
+    background: transparent;
   }
 
   .control-item {
-    font-size:15px;
+    padding: 2px;
+    margin: 5px;
+    display: flex;
+  }
+
+  .control-item-button {
+    display: inline-flex;
   }
 
   .control-item ion-icon:hover {
@@ -43,68 +48,68 @@
   }
 
   .control-item ion-icon {
-    font-size: 28px;
-    padding: 3px 0px 0px 0px;
+    padding: 3px;
+    margin-left: 5px;
+    border: 1px solid #f0f0f0;
+    border-radius: 1vh;
   }
 
-  .control-item span {
-    display: inline-block;
-    margin-bottom: 10px;
+  .control-item-index {
+    padding-left: 2px;
   }
 
   .control-item-label {
-    display: block;
-    text-align: center;
-    font-size: 12px;
-    padding-top: 5px;
+    padding: 1px;
   }
 
-  #song {
-    padding-left: 5px;
-    padding-right: 5px;
-    background: #ffffff;
+  #song-display {
     height: 100%;
-    margin: auto 0;
     min-height: 500px;
+    margin-top: 5em;
+
   }
 
   #song-html {
-    box-shadow: 0 0 30px 1px #d8d8d8;
-    -webkit-box-shadow: 0 0 30px 1px #d8d8d8;
-    -moz-box-shadow: 0 0 30px 1px #d8d8d8;
-    margin-top:60px;
-    min-height: 500px;
-    padding: 8px;
-    font-size:12px;
+    font-size: 16px;
+    padding: 5px;
   }
 
   #song-txt {
-    margin-top: 70px;
   }
 
   .chord {
     font-weight: bold;
+
   }
 
   .delimiter {
     padding: 3px;
   }
 
-/*  .lyric {
-    color: red;
-  }*/
+  /*  .lyric {
+      color: red;
+    }*/
 
   #options {
-    display: inline-flex;
     float: right;
-    width: 25%;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  #options ion-icon {
+    padding: 3px 0px 0px 0px;
+
   }
 
   #options button {
-    padding: 2px;
-    margin: 2px;
-    width: 100%;
+    width: 20%;
+    line-height: 1.1em;
     -webkit-appearance: none;
+    border-radius: 2vh;
+    margin: 2px;
   }
 
   #options button:focus {
@@ -113,74 +118,90 @@
 
   #options button:hover {
     color: #484848;
+    background: #f0f0f0;
   }
 
   #options button:active {
     border: none;
   }
+
   textarea {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
     display: block;
   }
-
 </style>
 {% endblock extra_css %}
 
-{% macro icon_button(id, name, size="small", onclick=None, hidden=False) -%}
+{% macro icon_button(id, name, hidden=False) -%}
 <ion-icon 
     id="{{ id }}"
     name="{{ name }}"
-    size="{{ size }}"
-    {% if hidden %}style="display:none;"{% endif %}
-    {% if onclick %}onclick="{{ onclick }}"{% endif %}></ion-icon>
+    {% if hidden %}style="display:none;"{% endif %}></ion-icon>
 {%- endmacro %}
 
 {% block body %}
   <div id="controls">
     <div class="control-item">
       <div class="control-item-label">transpose</div>
-      {{ icon_button("transpose-decrease-btn", "arrow-down-circle-sharp") }}
-      <span id="transpose-index">0</span>
-      {{ icon_button("transpose-increase-btn", "arrow-up-circle-sharp") }}
+      <div class="control-item-index" id="transpose-index">0</div>
+      <div class="control-item-button">
+        {{ icon_button("transpose-decrease-btn", "arrow-down-sharp") }}
+        {{ icon_button("transpose-increase-btn", "arrow-up-sharp") }}
+      </div>
     </div>
     <div class="control-item">
       <div class="control-item-label">scroll</div>
-      {{ icon_button("play-btn", "play-circle-sharp") }}
-      {{ icon_button("pause-btn", "pause-circle-sharp", hidden=True) }}
-      <span id="scroll-speed">0</span>
-      {{ icon_button("stop-btn", "stop-circle-sharp") }}
+      <div class="control-item-index" id="scroll-speed">0</div>
+      <div class="control-item-button">
+        {{ icon_button("play-btn", "play") }}
+        {{ icon_button("pause-btn", "pause", hidden=True) }}
+      </div>
     </div>
     <div class="control-item">
       <div class="control-item-label">font</div>
-      {{ icon_button("font-decrease-btn", "remove-circle-sharp") }}
-      <span id="font-size-index">0</span>
-      {{ icon_button("font-increase-btn", "add-circle-sharp") }}
+       <div class="control-item-index" id="font-size-index">0</div>
+       <div class="control-item-button">
+          {{ icon_button("font-decrease-btn", "remove-sharp") }}
+          {{ icon_button("font-increase-btn", "add-sharp") }}
+      </div>
     </div>
   </div>
+
+  <div id="options">
+    <button type="button" id="lock" name="lock">
+      {{ icon_button("unlock-btn", "lock-open-sharp") }}
+      {{ icon_button("lock-btn", "lock-closed-sharp", hidden=True) }}
+      <br><span id="lock-txt">lock</span>
+    </button>
+    <button type="button" id="download" name="download">
+      {{ icon_button("download-btn", "cloud-download-sharp") }}
+      <br>download
+    </button>
+    <button type="button" id="clear" name="clear">
+      {{ icon_button("clear-btn", "trash-sharp") }}
+      <br>clear
+    </button>
+  </div>
+
+
   <div id="song-form">
-    <form method="POST" action="/download">
-      <div id="options">
-        <button type="button" id="lock" name="lock">
-        {{ icon_button("unlock-btn", "lock-open-sharp") }}
-        {{ icon_button("lock-btn", "lock-closed-sharp", hidden=True) }}
-        <br><span id="lock-txt">lock</span>
-        </button>
-        <button type="submit" id="download" name="download">
-        {{ icon_button("download-btn", "cloud-download-sharp") }}
-        <br>download
-        </button>
-        <button type="button" id="clear" name="clear">
-        {{ icon_button("clear-btn", "trash-sharp") }}
-        <br>clear
-        </button>
-      </div>
-      <textarea id="song-txt" name="song_txt" rows="40" cols="108" style="white-space: pre-wrap;">{% include "instructions.txt" %}
-        </textarea>
+    <form id="download-form" method="POST" action="/download">
+      
+      <input type="text" id="content" name="content" style="display: none;"/>
       </form>
   </div>
   <div id="song-display">
+    <textarea id="song-txt" name="song_txt" rows="40" cols="104" style="white-space: pre-wrap;">{% include "instructions.txt" %}
+    </textarea>
     <div id="song-html" style="display: none;"></div>
   </div>
   <script>
+
+
+
     class Scroll {
       constructor() {
         this.is_paused = false
@@ -188,7 +209,6 @@
         this.interval = null
         this.play_btn = document.getElementById("play-btn")
         this.pause_btn = document.getElementById("pause-btn")
-        this.stop_btn = document.getElementById("stop-btn")
       }
 
       execute(method) {
@@ -260,9 +280,9 @@
 
     class Font {
       constructor() {
-        this.size = 18
+        this.size = 16
         this.index = 0
-        this.step = 3
+        this.step = 2
       }
 
       update_html() {
@@ -277,8 +297,8 @@
       }
 
       increase() {
-        if(this.size + this.step >= 36) {
-          this.size = 18
+        if(this.size === 26) {
+          this.size = 16
           this.index = 0
         }
         else {
@@ -290,8 +310,8 @@
       }
 
       decrease() {
-        if(this.size - this.step <= 0) {
-          this.size = 18
+        if(this.size === 6) {
+          this.size = 16
           this.index = 0
         }
         else {
@@ -416,13 +436,14 @@
     const composer = new Composer()
     const play_btn = document.getElementById("play-btn")
     const pause_btn = document.getElementById("pause-btn")
-    const stop_btn = document.getElementById("stop-btn")
     const font_increase_btn = document.getElementById("font-increase-btn")
     const font_decrease_btn = document.getElementById("font-decrease-btn")
     const transpose_increase_btn = document.getElementById("transpose-increase-btn")
     const transpose_decrease_btn = document.getElementById("transpose-decrease-btn")
     const clear = document.getElementById("clear")
     const lock = document.getElementById("lock")
+    const download_form = document.getElementById("download-form");
+    const download_btn = document.getElementById("download")
 
     play_btn.addEventListener("click", function(event) {
       composer.scroll.execute("play")
@@ -430,10 +451,6 @@
 
     pause_btn.addEventListener("click", function(event) {
       composer.scroll.execute("pause")
-    }, false)
-
-    stop_btn.addEventListener("click", function(event) {
-      composer.scroll.execute("stop")
     }, false)
 
     font_increase_btn.addEventListener("click", function(event) {
@@ -459,6 +476,12 @@
     lock.addEventListener("click", async function(event) {
       composer.toggle()
     }, false)
+
+    download_btn.addEventListener("click", function (event) {
+      var content = document.getElementById("content")
+      content.value = document.getElementById("song-txt").value
+      download_form.submit()
+    })
 
     document.addEventListener("keydown", async (event) => {
       if (event.code === "Space" && event.target !== composer.song_txt)
