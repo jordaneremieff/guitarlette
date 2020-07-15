@@ -56,6 +56,7 @@
 
   .control-item-index {
     padding-left: 2px;
+    font-size: x-small;
   }
 
   .control-item-label {
@@ -109,6 +110,7 @@
     line-height: 1.1em;
     -webkit-appearance: none;
     border-radius: 2vh;
+    border: 1px solid #f0f0f0;
     margin: 2px;
   }
 
@@ -185,27 +187,22 @@
       <br>clear
     </button>
   </div>
-
-
   <div id="song-form">
     <form id="download-form" method="POST" action="/download">
-      
       <input type="text" id="content" name="content" style="display: none;"/>
-      </form>
+    </form>
   </div>
   <div id="song-display">
-    <textarea id="song-txt" name="song_txt" rows="40" cols="104" style="white-space: pre-wrap;">{% include "instructions.txt" %}
+    <textarea id="song-txt" name="song_text" rows="40" cols="104" style="white-space: pre-wrap;">{% include "instructions.txt" %}
     </textarea>
     <div id="song-html" style="display: none;"></div>
   </div>
   <script>
-
-
-
     class Scroll {
       constructor() {
         this.is_paused = false
-        this.speed = 1
+        this.speed = 0.5
+        this.step = 0.5
         this.interval = null
         this.play_btn = document.getElementById("play-btn")
         this.pause_btn = document.getElementById("pause-btn")
@@ -229,7 +226,7 @@
         this.play_btn.style.display = "none"
         this.pause_btn.style.display = ""
         if (this.interval === null) {
-          this.speed = 1
+          this.speed = 0.5
           document.getElementById("scroll-speed").innerHTML = 1
           var t = this;
           this.interval = setInterval(function() {
@@ -240,7 +237,7 @@
                       behavior : "smooth"
                   });
             }
-          }, 100)
+          }, 130)
         }
       }
 
@@ -262,14 +259,14 @@
       }
 
       increase() {
-        if(!(this.speed + 1 > 20))
-          this.speed += 1
+        if(!(this.speed + this.step > 4))
+          this.speed += this.step
           document.getElementById("scroll-speed").innerHTML = this.speed
       }
 
       decrease() {
-        if(this.speed - 1 > 0) {
-          this.speed -= 1
+        if(this.speed - this.step > 0) {
+          this.speed -= this.step
           document.getElementById("scroll-speed").innerHTML = this.speed
         }
         else {
@@ -367,7 +364,7 @@
     class Composer {
       constructor() {
         this.is_locked = false
-        this.song_txt = document.getElementById("song-txt")
+        this.song_text = document.getElementById("song-txt")
         this.song_html = document.getElementById("song-html")
         this.lock_btn = document.getElementById("lock-btn")
         this.unlock_btn = document.getElementById("unlock-btn")
@@ -388,10 +385,10 @@
 
       async lock() {
         let response = await request("/parse", {
-          "content": this.song_txt.value
+          "content": this.song_text.value
         })
         this.is_locked = true
-        this.song_txt.style.display = "none"
+        this.song_text.style.display = "none"
         this.song_html.style.display = ""
         this.song_html.innerHTML = response.html_content
         this.unlock_btn.style.display = "none"
@@ -401,7 +398,7 @@
 
       unlock() {
         this.is_locked = false
-        this.song_txt.style.display = ""
+        this.song_text.style.display = ""
         this.song_html.style.display = "none"
         this.unlock_btn.style.display = ""
         this.lock_btn.style.display = "none"
@@ -413,7 +410,7 @@
       }
 
       clear() {
-        this.song_txt.value = ""
+        this.song_text.value = ""
         this.song_html.innerHTML = ""
       }
     }
@@ -484,7 +481,7 @@
     })
 
     document.addEventListener("keydown", async (event) => {
-      if (event.code === "Space" && event.target !== composer.song_txt)
+      if (event.code === "Space" && event.target !== composer.song_text)
         event.preventDefault()
       if(event.code == "Space")
         composer.scroll.toggle()

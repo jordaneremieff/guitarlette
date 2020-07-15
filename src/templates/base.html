@@ -42,6 +42,8 @@
     border: 1px solid #f0f0f0;
     color: #000000;
     padding: 5px 8px;
+    border-radius: 1vh;
+
   }
 
   nav li a {
@@ -54,14 +56,23 @@
     background-color: #d8d8d8;
   }
 
+
+  nav li ion-icon {
+    font-size: medium;
+  }
+
+
+  nav li ion-icon:hover {
+    color: #484848;
+  }
+
   #wrapper {
     margin-top: 7px;
     box-shadow: 0 0 10px 5px #d8d8d8;
     -webkit-box-shadow: 0 0 10px 5px #d8d8d8;
     -moz-box-shadow: 0 0 10px 5px #d8d8d8;
-    border: 1px solid purple;
-    width: calc(8em + 70vmin);
-    max-width: calc(8em + 70vmin);
+    width: calc(6em + 70vmin);
+    max-width: calc(6em + 70vmin);
   }
 
   #nav-title {
@@ -81,8 +92,10 @@
       <nav>
         <a href="/" id="nav-title">&#127928;guitarlette</a>
         <ul>
-          <li><a href="/" target="_blank">new</a></li>
-          <li><a href="/about">about</a></li>
+
+          <li title="new"><a href="/" target="_blank"><ion-icon name="create-outline"></ion-icon></a></li>
+          <li title="about" ><a href="/about"><ion-icon name="information-outline"></ion-icon></a></li>
+          <li title="github"><a href="https://github.com/jordaneremieff/guitarlette"><ion-icon name="logo-github"></ion-icon></a></li>
         </ul>
       </nav>
     {% block body %}{% endblock body %}
