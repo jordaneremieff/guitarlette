@@ -1,6 +1,6 @@
+from pathlib import Path
 from io import BytesIO
 from datetime import datetime
-from pathlib import Path
 
 from mangum import Mangum
 from fastapi import FastAPI, Request, Body, Form
@@ -11,12 +11,16 @@ from starlette.templating import Jinja2Templates
 from .song import Song
 
 
-templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
+BASE_DIR = Path(__file__).parent
+TEMPLATE_DIR = str(BASE_DIR / "templates")
+STATIC_DIR = str(BASE_DIR / "static")
+
+
+templates = Jinja2Templates(directory=TEMPLATE_DIR)
+static = StaticFiles(directory=STATIC_DIR)
 
 app = FastAPI()
-app.mount(
-    "/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static"
-)
+app.mount("/static", static, name="static")
 
 
 @app.get("/")
@@ -38,11 +42,11 @@ def parse(content: str = Body(..., embed=True)):
 @app.post("/transpose")
 def transpose(content: str = Body(...), degree: int = Body(...)):
     parser = Song(content, degree=degree)
-    return {"content": parser.txt, "html_content": parser.html}
+    return {"content": parser.text, "html_content": parser.html}
 
 
 @app.post("/download")
-def download(request: Request, content: str = Form(...)):
+def download(request: Request, content: str = Form(...)) -> StreamingResponse:
     filename = f"guitarlette-{datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}.txt"
     return StreamingResponse(
         BytesIO(content.encode()),
@@ -52,6 +56,7 @@ def download(request: Request, content: str = Form(...)):
 
 
 handler = Mangum(app, lifespan="off")
+
 
 # if __name__ == "__main__":
 #     import uvicorn
