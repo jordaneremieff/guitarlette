@@ -1,54 +1,89 @@
 import typing
-from dataclasses import dataclass, InitVar
-
+from dataclasses import dataclass
+from collections import deque
 from pychord import Chord
+
+
+class Token:
+    __slots__ = ("content", "indexes", "is_new_row", "degree")
+
+    def __init__(self, content: str, degree: typing.Optional[int] = None) -> None:
+        self.content = content
+        self.indexes = deque()
+        self.is_new_row = True
+        self.degree = degree
+
+    def append(self, index: int) -> None:
+        self.indexes.append(index)
+
+    def render(self) -> str:
+        s = self.content.strip().decode()
+        if s == "":
+            return f"<span class='delimiter'></span>"
+        if s == "{$s}":
+            return " "
+        if s == "{$n}" and self.is_new_row:
+            self.is_new_row = False
+            return "<div class='row'>"
+        if s == "{$n}" and not self.is_new_row:
+            self.is_new_row = True
+            return "</div>"
+
+        try:
+            chord = Chord(s)
+        except ValueError:
+            return f"<span class='lyric'>{s}</span>"
+
+        if self.degree:
+            chord.transpose(self.degree)
+            s = str(chord)
+
+        return f"<span class='chord'>{s}</span>"
 
 
 @dataclass
 class Song:
-    source: InitVar[str]
-    degree: InitVar[typing.Optional[int]] = None
+    text: str
+    degree: typing.Optional[int] = None
 
-    def __post_init__(self, source: str, degree: typing.Optional[int] = None) -> None:
-        html_rows = []
-        text_rows = []
-        chords = []
-        rows = source.strip().split("\n")
-        row_count = len(rows)
-        row_index = 0
-        while row_index < row_count - 1:
-            row = rows[row_index]
-            row_parts = row.split(" ")
-            html_values = []
-            text_values = []
-            for value in row_parts:
-                try:
-                    chord = Chord(value.strip())
-                except ValueError:
-                    chord = None
+    def __post_init__(self) -> None:
+        parsed = (
+            self.text.encode("utf-8")
+            .strip()
+            .replace(b"\n", b" {$n} ")
+            .replace(b" ", b" {$s} ")
+        ).split(b" ")
+        total = len(parsed)
+        result = deque()
+        is_tokenized = False
+        index = 0
+        tokens = {}
 
-                if chord:
-                    html_class = "chord"
-                    if degree is not None:
-                        chord.transpose(degree)
-                        value = str(chord)
-                    if value not in chords:
-                        chords.append(value)
-                elif value == "":
-                    html_class = "delimiter"
+        while True:
+            if not is_tokenized:
+                token_key = parsed[index].strip()
+
+                if token_key not in tokens.keys():
+                    token = Token(content=token_key, degree=self.degree)
+                    token.append(index)
+                    tokens[token_key] = token
                 else:
-                    html_class = "lyric"
+                    tokens[token_key].append(index)
 
-                html_value = f"<span class='{html_class}'>{value}</span>"
-                html_values.append(html_value)
-                text_values.append(value)
+                if index + 1 == total and not is_tokenized:
+                    is_tokenized = True
+                else:
+                    index += 1
+            else:
+                token_key = parsed[index]
+                token = tokens[token_key]
+                rendered = token.render()
 
-                html_row = f"<div class='row'>{' '.join(html_values)}</div>"
-                text_row = " ".join(text_values)
+                result.appendleft(rendered)
 
-            html_rows.append(html_row)
-            text_rows.append(text_row)
-            row_index += 1
+                if index == 0:
+                    break
 
-        self.html: str = "".join(html_rows)
-        self.text: str = "\n".join(text_rows)
+                index -= 1
+
+        self.html: str = "".join(result)
