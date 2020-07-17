@@ -5,16 +5,12 @@ from pychord import Chord
 
 
 class Token:
-    __slots__ = ("content", "indexes", "is_new_row", "degree")
+    __slots__ = ("content", "is_new_row", "degree")
 
     def __init__(self, content: str, degree: typing.Optional[int] = None) -> None:
         self.content = content
-        self.indexes = deque()
         self.is_new_row = True
         self.degree = degree
-
-    def append(self, index: int) -> None:
-        self.indexes.append(index)
 
     def render(self) -> str:
         s = self.content.strip().decode()
@@ -55,35 +51,16 @@ class Song:
         ).split(b" ")
         total = len(parsed)
         result = deque()
-        is_tokenized = False
-        index = 0
         tokens = {}
 
-        while True:
-            if not is_tokenized:
-                token_key = parsed[index].strip()
-
-                if token_key not in tokens.keys():
-                    token = Token(content=token_key, degree=self.degree)
-                    token.append(index)
-                    tokens[token_key] = token
-                else:
-                    tokens[token_key].append(index)
-
-                if index + 1 == total and not is_tokenized:
-                    is_tokenized = True
-                else:
-                    index += 1
+        for index in range(total):
+            token_key = parsed[index].strip()
+            if token_key not in tokens.keys():
+                token = Token(content=token_key, degree=self.degree)
+                tokens[token_key] = token
             else:
-                token_key = parsed[index]
-                token = tokens[token_key]
-                rendered = token.render()
-
-                result.appendleft(rendered)
-
-                if index == 0:
-                    break
-
-                index -= 1
+                token = tokens.get(token_key)
+            rendered = token.render()
+            result.append(rendered)
 
         self.html: str = "".join(result)
